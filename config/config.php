@@ -10,7 +10,7 @@ define('COMPANY_ADDRESS', 'A-102, Swagat Status 2, Off New CG Road, Chandkheda, 
 define('COMPANY_GST', '29ABCDE1234F1Z5');
 define('COMPANY_WEBSITE', 'https://www.sushobha.com');
 define('BASE_URL', 'http://localhost/SushobhaCRM');
-define('CURRENCY_SYMBOL', '&#8377;');
+define('CURRENCY_SYMBOL', '₹');
 define('CURRENCY_CODE', 'INR');
 define('TAX_NAME', 'GST');
 define('DEFAULT_TAX', 18);

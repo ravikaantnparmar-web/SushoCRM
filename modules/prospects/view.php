@@ -214,7 +214,7 @@ include __DIR__ . '/../../includes/header.php';
       <div class="col-6 col-md-3">
         <div class="stat-card">
           <div class="text-muted">Est. Budget</div>
-          <h5 class="text-success"><?= $lead['estimated_budget'] > 0 ? '₹'.formatCurrency($lead['estimated_budget']) : '<span class="text-muted">-</span>' ?></h5>
+          <h5 class="text-success"><?= $lead['estimated_budget'] > 0 ? formatCurrency($lead['estimated_budget']) : '<span class="text-muted">-</span>' ?></h5>
         </div>
       </div>
     </div>
