@@ -1,0 +1,289 @@
+<?php
+require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/../../config/session.php';
+require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../includes/functions.php';
+require_once __DIR__ . '/constants.php';
+requireLogin();
+
+$id = (int)($_POST['id'] ?? 0);
+if ($id <= 0) { header('Location: index.php'); exit; }
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header("Location: edit.php?id=$id"); exit;
+}
+
+try {
+    db()->beginTransaction();
+    $updatedBy = $_SESSION['user_id'];
+
+    // Find primary address (or first valid address) to sync to main leads table legacy columns
+    $primaryAddr = null;
+    if (!empty($_POST['addresses'])) {
+        foreach ($_POST['addresses'] as $a) {
+            if (!empty($a['address_line1']) || !empty($a['city']) || !empty($a['google_address'])) {
+                if (!empty($a['is_primary'])) {
+                    $primaryAddr = $a;
+                    break;
+                }
+            }
+        }
+        if (!$primaryAddr) {
+            foreach ($_POST['addresses'] as $a) {
+                if (!empty($a['address_line1']) || !empty($a['city']) || !empty($a['google_address'])) {
+                    $primaryAddr = $a;
+                    break;
+                }
+            }
+        }
+    }
+
+    // ── 1. UPDATE Main Lead ───────────────────────────────────
+    $sql = "UPDATE leads SET
+        lead_date = ?, lead_status = ?, lead_priority = ?, lead_source = ?, lead_type = ?,
+        assigned_to = ?, actual_followup_date = ?, next_followup_date = ?, expected_closing_date = ?,
+        company_name = ?, company_type = ?, industry_type = ?, tin_number = ?,
+        company_email = ?, company_website = ?, gst_number = ?, company_status = ?,
+        site_stage = ?, project_type = ?,
+        google_location = ?, google_address = ?, google_maps_link = ?, lat = ?, lng = ?,
+        address_line1 = ?, address_line2 = ?, area = ?, city = ?, state = ?, pincode = ?,
+        product_type = ?, requirement_description = ?, estimated_budget = ?,
+        purchase_timeline = ?, competitor_info = ?, updated_by = ?
+        WHERE id = ?";
+
+    $oldLeadStmt = db()->prepare("SELECT * FROM leads WHERE id = ?");
+    $oldLeadStmt->execute([$id]);
+    $oldLead = $oldLeadStmt->fetch(PDO::FETCH_ASSOC);
+
+    $newLeadData = [
+        'lead_date'             => $_POST['lead_date'] ?? date('Y-m-d'),
+        'lead_status'           => $_POST['meeting_lead_status'] ?? ($_POST['lead_status'] ?? 'New'),
+        'lead_priority'         => $_POST['lead_priority'] ?? null,
+        'lead_source'           => $_POST['lead_source'] ?: null,
+        'lead_type'             => $_POST['lead_type'] ?: null,
+        'assigned_to'           => $_POST['assigned_to'] ?: null,
+        'actual_followup_date'  => $_POST['actual_followup_date'] ?: null,
+        'next_followup_date'    => $_POST['next_followup_date'] ?: null,
+        'expected_closing_date' => $_POST['expected_closing_date'] ?: null,
+        'company_name'          => $_POST['company_name'] ?: null,
+        'company_type'          => $_POST['company_type'] ?: null,
+        'industry_type'         => $_POST['industry_type'] ?: null,
+        'tin_number'            => $_POST['tin_number'] ?: null,
+        'company_email'         => $_POST['company_email'] ?: null,
+        'company_website'       => $_POST['company_website'] ?: null,
+        'gst_number'            => $_POST['gst_number'] ?: null,
+        'company_status'        => $_POST['company_status'] ?? 'Active',
+        'site_stage'            => $_POST['site_stage'] ?: null,
+        'project_type'          => $_POST['project_type'] ?: null,
+        'google_location'       => $primaryAddr['google_location'] ?? null ?: null,
+        'google_address'        => $primaryAddr['google_address'] ?? null ?: null,
+        'google_maps_link'      => $primaryAddr['google_maps_link'] ?? null ?: null,
+        'lat'                   => $primaryAddr['lat'] ?? null ?: null,
+        'lng'                   => $primaryAddr['lng'] ?? null ?: null,
+        'address_line1'         => $primaryAddr['address_line1'] ?? null ?: null,
+        'address_line2'         => $primaryAddr['address_line2'] ?? null ?: null,
+        'area'                  => $primaryAddr['area'] ?? null ?: null,
+        'city'                  => $primaryAddr['city'] ?? null ?: null,
+        'state'                 => $primaryAddr['state'] ?? null ?: null,
+        'pincode'               => $primaryAddr['pincode'] ?? null ?: null,
+        'product_type'          => $_POST['product_type'] ?: null,
+        'requirement_description'=> $_POST['requirement_description'] ?: null,
+        'estimated_budget'      => (float)($_POST['estimated_budget'] ?? 0),
+        'purchase_timeline'     => $_POST['purchase_timeline'] ?: null,
+        'competitor_info'       => $_POST['competitor_info'] ?: null,
+        'updated_by'            => $updatedBy
+    ];
+    
+    $params = array_values($newLeadData);
+    $params[] = $id;
+
+    db()->prepare($sql)->execute($params);
+
+    // ── 2. Refresh Contacts ───────────────────────────────────
+    db()->prepare("DELETE FROM contact_relations WHERE entity_type = 'lead' AND entity_id = ?")->execute([$id]);
+    if (!empty($_POST['contacts'])) {
+        $stmtContact = db()->prepare("INSERT INTO contacts (contact_type, name, mobile, whatsapp, email, visiting_card, organization_name, address, city, state, pincode, website) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
+        $stmtRelation = db()->prepare("INSERT IGNORE INTO contact_relations (contact_id, entity_type, entity_id, role, is_primary) VALUES (?, 'lead', ?, ?, ?)");
+        
+        foreach ($_POST['contacts'] as $idx => $c) {
+            if (empty($c['name'])) continue;
+            // Preserve existing cards + add new ones
+            $cardPaths = !empty($c['existing_card'])
+                ? (json_decode($c['existing_card'], true) ?: [$c['existing_card']])
+                : [];
+            if (!empty($_FILES['contacts']['name'][$idx]['card_file'][0])) {
+                $files = $_FILES['contacts'];
+                foreach ($files['name'][$idx]['card_file'] as $fIdx => $fName) {
+                    if ($files['error'][$idx]['card_file'][$fIdx] == UPLOAD_ERR_OK) {
+                        $fd = [
+                            'name' => $fName, 'type' => $files['type'][$idx]['card_file'][$fIdx],
+                            'tmp_name' => $files['tmp_name'][$idx]['card_file'][$fIdx],
+                            'error' => $files['error'][$idx]['card_file'][$fIdx],
+                            'size' => $files['size'][$idx]['card_file'][$fIdx],
+                        ];
+                        $path = uploadFile($fd, 'leads/cards');
+                        if ($path) $cardPaths[] = $path;
+                    }
+                }
+            }
+            
+            // Try to find existing contact
+            $existing = false;
+            
+            if (!empty($c['master_contact_id'])) {
+                $existing = (int)$c['master_contact_id'];
+            } else {
+                if (!empty($c['mobile'])) {
+                    $check = db()->prepare("SELECT id FROM contacts WHERE mobile = ? LIMIT 1");
+                    $check->execute([$c['mobile']]);
+                    $existing = $check->fetchColumn();
+                }
+                if (!$existing && !empty($c['email'])) {
+                    $check = db()->prepare("SELECT id FROM contacts WHERE email = ? LIMIT 1");
+                    $check->execute([$c['email']]);
+                    $existing = $check->fetchColumn();
+                }
+                if (!$existing) {
+                    $check = db()->prepare("SELECT id FROM contacts WHERE name = ? LIMIT 1");
+                    $check->execute([$c['name']]);
+                    $existing = $check->fetchColumn();
+                }
+            }
+
+            if ($existing) {
+                $contactId = $existing;
+            } else {
+                $stmtContact->execute([
+                    $c['type'] ?? 'Owner', $c['name'],
+                    $c['mobile'] ?: null, $c['whatsapp'] ?: null, $c['email'] ?: null,
+                    !empty($cardPaths) ? json_encode($cardPaths) : null,
+                    $c['organization_name'] ?? null, $c['address'] ?? null,
+                    $c['city'] ?? null, $c['state'] ?? null, $c['pincode'] ?? null,
+                    $c['website'] ?? null
+                ]);
+                $contactId = db()->lastInsertId();
+            }
+
+            $stmtRelation->execute([
+                $contactId,
+                $id,
+                $c['type'] ?? 'Owner',
+                !empty($c['is_primary']) ? 1 : 0
+            ]);
+        }
+    }
+
+    // ── 2b. Refresh Addresses ───────────────────────────────────
+    db()->prepare("DELETE FROM lead_addresses WHERE lead_id = ?")->execute([$id]);
+    if (!empty($_POST['addresses'])) {
+        $stmtAddr = db()->prepare(
+            "INSERT INTO lead_addresses (lead_id, address_type, address_line1, address_line2, area, city, state, pincode, lat, lng, google_location, google_address, google_maps_link, is_primary)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+        );
+        foreach ($_POST['addresses'] as $a) {
+            if (empty($a['address_line1']) && empty($a['city']) && empty($a['google_address'])) continue;
+            
+            $stmtAddr->execute([
+                $id,
+                $a['address_type']    ?: null,
+                $a['address_line1']   ?: null,
+                $a['address_line2']   ?: null,
+                $a['area']            ?: null,
+                $a['city']            ?: null,
+                $a['state']           ?: null,
+                $a['pincode']         ?: null,
+                $a['lat']             ?: null,
+                $a['lng']             ?: null,
+                $a['google_location'] ?: null,
+                $a['google_address']  ?: null,
+                $a['google_maps_link']?: null,
+                !empty($a['is_primary']) ? 1 : 0,
+            ]);
+        }
+    }
+
+    // ── 3. Refresh Products ───────────────────────────────────
+    db()->prepare("DELETE FROM lead_interested_products WHERE lead_id = ?")->execute([$id]);
+    if (!empty($_POST['interested_products'])) {
+        $stmtProd = db()->prepare("INSERT INTO lead_interested_products (lead_id, product_name) VALUES (?,?)");
+        foreach ($_POST['interested_products'] as $p) {
+            if ($p) $stmtProd->execute([$id, $p]);
+        }
+    }
+
+    // ── 4. New Document Uploads ───────────────────────────────
+    $allFiles = [];
+    if (!empty($_FILES['documents']['name'][0])) {
+        foreach ($_FILES['documents']['name'] as $k => $name) {
+            $allFiles[] = ['name'=>$name,'type'=>$_FILES['documents']['type'][$k],'tmp_name'=>$_FILES['documents']['tmp_name'][$k],'error'=>$_FILES['documents']['error'][$k],'size'=>$_FILES['documents']['size'][$k],'source'=>'Device'];
+        }
+    }
+    if (!empty($_FILES['camera_photos']['name'][0])) {
+        foreach ($_FILES['camera_photos']['name'] as $k => $name) {
+            $allFiles[] = ['name'=>$name,'type'=>$_FILES['camera_photos']['type'][$k],'tmp_name'=>$_FILES['camera_photos']['tmp_name'][$k],'error'=>$_FILES['camera_photos']['error'][$k],'size'=>$_FILES['camera_photos']['size'][$k],'source'=>'Mobile'];
+        }
+    }
+    $stmtDoc = db()->prepare("INSERT INTO lead_documents (lead_id, file_path, file_name, file_type, category, remark, uploaded_from, uploaded_by) VALUES (?,?,?,?,?,?,?,?)");
+    foreach ($allFiles as $fd) {
+        $path = uploadFile($fd, 'leads');
+        if ($path) $stmtDoc->execute([$id, $path, $fd['name'], $fd['type'], 'Site Media', $_POST['upload_remark'] ?? null, $fd['source'], $updatedBy]);
+    }
+
+    // ── 5. New Meeting ────────────────────────────────────────
+    if (!empty($_POST['meeting_with_name'])) {
+        db()->prepare("INSERT INTO lead_meetings (lead_id, meeting_with, type, purpose, status, sales_stage, followup_date, created_by) VALUES (?,?,?,?,?,?,?,?)")
+           ->execute([$id, $_POST['meeting_with_name'], $_POST['meeting_type'] ?? 'Site Visit', $_POST['meeting_purpose'] ?? null, $_POST['meeting_status'] ?? 'Scheduled', $_POST['sales_stage'] ?: null, $_POST['meeting_followup_date'] ?: null, $updatedBy]);
+    }
+
+    // ── 6. Timeline ───────────────────────────────────────────
+    $trackFields = [
+        'lead_status' => 'Status',
+        'lead_priority' => 'Priority',
+        'assigned_to' => 'Assigned To',
+        'expected_closing_date' => 'Expected Closing Date',
+        'estimated_budget' => 'Estimated Budget',
+        'company_name' => 'Company Name',
+        'company_status' => 'Company Status',
+        'site_stage' => 'Site Stage',
+        'project_type' => 'Project Type',
+    ];
+
+    $changes = [];
+    if (isset($oldLead) && $oldLead) {
+        foreach ($trackFields as $key => $label) {
+            $oldVal = (string)($oldLead[$key] ?? '');
+            $newVal = (string)($newLeadData[$key] ?? '');
+            
+            if ($key === 'estimated_budget' && $oldVal != $newVal) {
+                $oldVal = round((float)$oldVal, 2);
+                $newVal = round((float)$newVal, 2);
+            }
+
+            if ($oldVal !== $newVal) {
+                if ($key === 'assigned_to') {
+                    $newName = $newVal ? db()->query("SELECT name FROM users WHERE id = " . (int)$newVal)->fetchColumn() : 'None';
+                    $changes[] = "$label to $newName";
+                } else {
+                    $displayNew = $newVal ?: 'None';
+                    $changes[] = "$label to $displayNew";
+                }
+            }
+        }
+    }
+
+    $description = !empty($changes) ? 'Updated: ' . implode(', ', $changes) . '.' : 'Lead details updated.';
+
+    db()->prepare("INSERT INTO lead_timeline (lead_id, user_id, action_type, description) VALUES (?,?,?,?)")
+       ->execute([$id, $updatedBy, 'Updated', $description]);
+
+    db()->commit();
+    setFlash('success', 'Lead updated successfully.');
+    header("Location: view.php?id=$id");
+
+} catch (Exception $e) {
+    if (db()->inTransaction()) db()->rollBack();
+    setFlash('danger', 'Update failed: ' . $e->getMessage());
+    header("Location: edit.php?id=$id");
+}
+exit;
