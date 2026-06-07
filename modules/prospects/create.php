@@ -219,8 +219,51 @@ include __DIR__ . '/../../includes/header.php';
 }
 
 @media (max-width: 900px) {
-  .lead-edit-outer { flex-direction: column; }
-  .lead-right-col { width: 100%; }
+  .lead-edit-outer { flex-direction: column; padding: 12px 12px 80px !important; }
+  .lead-right-col  { width: 100%; }
+}
+
+/* ── Mobile: topstrip compact ── */
+@media (max-width: 600px) {
+  .lead-edit-topstrip {
+    padding: 10px 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  .lead-edit-topstrip h1 {
+    font-size: 14px;
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .lead-edit-topstrip .strip-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .lead-edit-topstrip .strip-actions .btn {
+    padding: 7px 12px;
+    font-size: 12px;
+    min-height: 38px;
+    width: auto;
+    margin-bottom: 0;
+  }
+  .ls-card-body { padding: 12px; }
+  .ls-card-header h6 { font-size: 10px; }
+  .ls-sticky-bar {
+    padding: 8px 12px;
+    justify-content: stretch;
+  }
+  .ls-sticky-bar .btn {
+    flex: 1 1 auto;
+    min-height: 44px;
+    font-size: 13px;
+    margin-bottom: 0;
+    width: auto;
+  }
 }
 </style>
 
