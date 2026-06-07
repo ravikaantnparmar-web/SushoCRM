@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/functions.php';
 requireLogin();
-
+requirePermission('invoices', 'view');
 $id = (int)($_GET['id'] ?? 0);
 $stmt = db()->prepare("SELECT i.*, 
     (SELECT cnt.name FROM contacts cnt JOIN contact_relations cr ON cnt.id = cr.contact_id WHERE cr.entity_type = 'customer' AND cr.entity_id = c.id AND cr.is_primary = 1 LIMIT 1) AS customer_name, 

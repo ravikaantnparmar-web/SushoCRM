@@ -561,7 +561,7 @@ include __DIR__ . '/../../includes/header.php';
     // ---- Pre-fill if POST had a customer_id (form validation error re-render) ----
 <?php if (!empty($_POST['customer_id'])):
     $cId   = (int)$_POST['customer_id'];
-    $cData = db()->query("SELECT id, name, company, customer_type FROM customers WHERE id = $cId")->fetch();
+    $stmtC = db()->prepare("SELECT id, name, company, customer_type FROM customers WHERE id = ?"); $stmtC->execute([$cId]); $cData = $stmtC->fetch();
     if ($cData): ?>
     selectCustomer(<?= json_encode(['id'=>$cData['id'],'name'=>$cData['name'],'company'=>$cData['company'],'customer_type'=>$cData['customer_type']]) ?>);
 <?php endif; endif; ?>

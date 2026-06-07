@@ -8,10 +8,20 @@ class Database {
 
     public static function getInstance(): PDO {
         if (self::$instance === null) {
-            $host   = 'localhost';
-            $dbname = 'sushobha_crm';
-            $user   = 'root';
-            $pass   = '';
+            // Automatically switch credentials based on the environment
+            if ($_SERVER['HTTP_HOST'] === 'localhost' || $_SERVER['HTTP_HOST'] === '127.0.0.1') {
+                // Local XAMPP Credentials
+                $host   = 'localhost';
+                $dbname = 'sushobha_crm';
+                $user   = 'root';
+                $pass   = '';
+            } else {
+                // Hostinger Production Credentials
+                $host   = 'localhost';
+                $dbname = 'u738172090_sushodb';
+                $user   = 'u738172090_sushousr';
+                $pass   = 'Hanumaan@102';
+            }
             $charset = 'utf8mb4';
 
             $dsn = "mysql:host={$host};dbname={$dbname};charset={$charset}";

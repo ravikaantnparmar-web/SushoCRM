@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/functions.php';
 requireLogin();
-
+requirePermission('prospects', 'delete');
 $id = (int)($_GET['id'] ?? 0);
 if ($id > 0) {
     $stmt = db()->prepare("UPDATE leads SET deleted_at = NOW(), updated_by = ? WHERE id = ?");

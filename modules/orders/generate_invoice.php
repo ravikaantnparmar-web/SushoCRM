@@ -5,8 +5,15 @@ require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/functions.php';
 requireLogin();
-
+requirePermission('invoices', 'create');
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header('Location: ' . BASE_URL . '/modules/orders/index.php');
+    exit;
+}
+
+if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
+    setFlash('danger', 'Invalid security token (CSRF). Please try again.');
+    logActivity('System', 'CSRF Failure', 'Failed CSRF validation in generate_invoice.php');
     header('Location: ' . BASE_URL . '/modules/orders/index.php');
     exit;
 }
@@ -117,7 +124,8 @@ try {
 
 } catch (Exception $e) {
     db()->rollBack();
-    setFlash('danger', 'An error occurred: ' . $e->getMessage());
+    logActivity('System', 'Database Error', 'Error generating invoice from order: ' . $order_id);
+    setFlash('danger', 'An internal error occurred while generating the invoice. Please try again.');
     header('Location: ' . BASE_URL . '/modules/orders/view.php?id=' . $order_id);
     exit;
 }

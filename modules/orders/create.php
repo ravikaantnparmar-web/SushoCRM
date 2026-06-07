@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/functions.php';
 requireLogin();
-
+requirePermission('orders', 'create');
 $pageTitle = 'Create Order';
 $errors = [];
 $customers = getAllCustomers();
@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             
             if ($quotation_id) {
-                $q_approval = db()->query("SELECT approval_status FROM quotations WHERE id = $quotation_id")->fetchColumn();
+                $stmtQ = db()->prepare("SELECT approval_status FROM quotations WHERE id = ?"); $stmtQ->execute([$quotation_id]); $q_approval = $stmtQ->fetchColumn();
                 if ($q_approval !== 'approved') {
                     throw new Exception("Quotation must be approved before it can be converted to an order.");
                 }

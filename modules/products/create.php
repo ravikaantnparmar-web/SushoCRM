@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/functions.php';
 requireLogin();
-
+requirePermission('products', 'create');
 $pageTitle = 'Add Product';
 $errors = [];
 $categories = db()->query("SELECT * FROM product_categories ORDER BY name")->fetchAll();

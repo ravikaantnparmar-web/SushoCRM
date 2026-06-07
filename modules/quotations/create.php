@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/functions.php';
 requireLogin();
-
+requirePermission('quotations', 'create');
 $pageTitle = 'Create Quotation';
 $errors = [];
 $customers = getAllCustomers();

@@ -13,6 +13,13 @@ if (!isAdmin()) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
+        setFlash('danger', 'Invalid security token (CSRF). Please try again.');
+        logActivity('System', 'CSRF Failure', 'Failed CSRF validation in update_approval.php');
+        header('Location: ' . BASE_URL . '/modules/quotations/index.php');
+        exit;
+    }
+
     $id = (int)($_POST['id'] ?? 0);
     $status = sanitize($_POST['approval_status'] ?? '');
     $remarks = sanitize($_POST['approval_remarks'] ?? '');
@@ -29,12 +36,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = db()->prepare("UPDATE quotations SET approval_status = ?, approval_remarks = ? WHERE id = ?");
         $stmt->execute([$status, $remarks, $id]);
         
-        $quoteNumber = db()->query("SELECT quote_number FROM quotations WHERE id = $id")->fetchColumn();
+        $stmtNum = db()->prepare("SELECT quote_number FROM quotations WHERE id = ?");
+        $stmtNum->execute([$id]);
+        $quoteNumber = $stmtNum->fetchColumn();
         logActivity('quotations', 'approve', "Updated approval status to '$status' for quotation: $quoteNumber", $id);
         
         setFlash('success', "Quotation approval status updated to " . ucfirst(str_replace('_', ' ', $status)) . ".");
     } catch (Exception $e) {
-        setFlash('danger', 'An error occurred: ' . $e->getMessage());
+        logActivity('System', 'Database Error', 'Error updating quotation approval: ' . $e->getMessage());
+        setFlash('danger', 'An internal error occurred. Please try again later.');
     }
     
     header('Location: ' . BASE_URL . '/modules/quotations/view.php?id=' . $id);

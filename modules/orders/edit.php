@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/functions.php';
 requireLogin();
-
+requirePermission('orders', 'edit');
 $id = (int)($_GET['id'] ?? 0);
 $stmt = db()->prepare("SELECT * FROM orders WHERE id=?");
 $stmt->execute([$id]);

@@ -4,38 +4,65 @@ require_once __DIR__ . '/../../config/session.php';
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/functions.php';
+requireLogin();
 requireRole(['super_admin', 'admin']);
 
 $pageTitle = 'Manage Communication Board';
 $db = db();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
+        setFlash('danger', 'Invalid security token (CSRF). Please try again.');
+        logActivity('Announcements', 'CSRF Failure', 'Failed CSRF token validation on ' . sanitize($_POST['action']));
+        header('Location: announcements.php');
+        exit;
+    }
+
     if ($_POST['action'] === 'add') {
         $title = sanitize($_POST['title']);
-        $content = $_POST['content'];
-        $category = $_POST['category'];
-        $priority = $_POST['priority'];
+        $content = sanitize($_POST['content']);
+        $category = sanitize($_POST['category']);
+        $priority = sanitize($_POST['priority']);
+        
+        $allowedPriorities = ['Low', 'Medium', 'High'];
+        $allowedCategories = ['Announcement', 'Management Note', 'Policy Update', 'Target Reminder', 'Operational Alert'];
+        if (!in_array($priority, $allowedPriorities)) $priority = 'Medium';
+        if (!in_array($category, $allowedCategories)) $category = 'Announcement';
         
         $stmt = $db->prepare("INSERT INTO announcements (title, content, category, priority, created_by) VALUES (?, ?, ?, ?, ?)");
         $stmt->execute([$title, $content, $category, $priority, $_SESSION['user_id']]);
+        
+        $newId = $db->lastInsertId();
+        logActivity('Announcements', 'Created', "Created announcement: {$title}", $newId);
         setFlash('success', 'Announcement posted successfully.');
     } elseif ($_POST['action'] === 'edit') {
         $id = (int)$_POST['id'];
         $title = sanitize($_POST['title']);
-        $content = $_POST['content'];
-        $category = $_POST['category'];
-        $priority = $_POST['priority'];
+        $content = sanitize($_POST['content']);
+        $category = sanitize($_POST['category']);
+        $priority = sanitize($_POST['priority']);
+        
+        $allowedPriorities = ['Low', 'Medium', 'High'];
+        $allowedCategories = ['Announcement', 'Management Note', 'Policy Update', 'Target Reminder', 'Operational Alert'];
+        if (!in_array($priority, $allowedPriorities)) $priority = 'Medium';
+        if (!in_array($category, $allowedCategories)) $category = 'Announcement';
         
         $stmt = $db->prepare("UPDATE announcements SET title=?, content=?, category=?, priority=? WHERE id=?");
         $stmt->execute([$title, $content, $category, $priority, $id]);
+        
+        logActivity('Announcements', 'Updated', "Updated announcement: {$title}", $id);
         setFlash('success', 'Announcement updated successfully.');
     } elseif ($_POST['action'] === 'toggle') {
         $id = (int)$_POST['id'];
         $stmt = $db->prepare("UPDATE announcements SET is_active = NOT is_active WHERE id = ?");
         $stmt->execute([$id]);
+        logActivity('Announcements', 'Toggled Status', "Toggled status for announcement ID: {$id}", $id);
+        setFlash('success', 'Announcement status updated.');
     } elseif ($_POST['action'] === 'delete') {
         $id = (int)$_POST['id'];
         $db->prepare("DELETE FROM announcements WHERE id = ?")->execute([$id]);
+        logActivity('Announcements', 'Deleted', "Deleted announcement ID: {$id}");
+        setFlash('success', 'Announcement deleted.');
     }
     header('Location: announcements.php');
     exit;
@@ -96,6 +123,7 @@ include __DIR__ . '/../../includes/header.php';
             <form method="POST" class="d-inline">
                 <input type="hidden" name="action" value="toggle">
                 <input type="hidden" name="id" value="<?= $a['id'] ?>">
+                <?= csrfField() ?>
                 <button type="submit" class="btn btn-sm <?= $a['is_active']?'btn-success':'btn-secondary' ?>">
                     <?= $a['is_active']?'Active':'Inactive' ?>
                 </button>
@@ -108,6 +136,7 @@ include __DIR__ . '/../../includes/header.php';
                 <form method="POST" class="d-inline" onsubmit="return confirm('Delete this announcement?')">
                     <input type="hidden" name="action" value="delete">
                     <input type="hidden" name="id" value="<?= $a['id'] ?>">
+                    <?= csrfField() ?>
                     <button type="submit" class="btn btn-icon btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
                 </form>
             </div>
@@ -125,6 +154,7 @@ include __DIR__ . '/../../includes/header.php';
     <div class="modal-content border-0 shadow">
       <form method="POST">
         <input type="hidden" name="action" value="add">
+        <?= csrfField() ?>
         <div class="modal-header bg-primary text-white py-3 border-0 rounded-top">
           <h5 class="modal-title fw-semibold fs-5"><i class="bi bi-megaphone me-2"></i>New Announcement</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -202,6 +232,7 @@ include __DIR__ . '/../../includes/header.php';
       <form method="POST">
         <input type="hidden" name="action" value="edit">
         <input type="hidden" name="id" value="<?= $a['id'] ?>">
+        <?= csrfField() ?>
         <div class="modal-header bg-primary text-white py-3 border-0 rounded-top">
           <h5 class="modal-title fw-semibold fs-5"><i class="bi bi-pencil me-2"></i>Edit Announcement</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>

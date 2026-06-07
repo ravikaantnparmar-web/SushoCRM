@@ -6,6 +6,7 @@ require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/functions.php';
 
 requireLogin();
+requirePermission('reports', 'view');
 
 $pageTitle = 'Task Analytics';
 include __DIR__ . '/../../includes/header.php';

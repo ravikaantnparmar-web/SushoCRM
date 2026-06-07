@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/functions.php';
 requireLogin();
-
+requirePermission('orders', 'view');
 $id = (int)($_GET['id'] ?? 0);
 $stmt = db()->prepare("SELECT o.*, 
     (SELECT cnt.name FROM contacts cnt JOIN contact_relations cr ON cnt.id = cr.contact_id WHERE cr.entity_type = 'customer' AND cr.entity_id = c.id AND cr.is_primary = 1 LIMIT 1) AS customer_name, 
@@ -52,6 +52,7 @@ include __DIR__ . '/../../includes/header.php';
       <a href="<?= BASE_URL ?>/modules/invoices/view.php?id=<?= $existingInvoice['id'] ?>" class="btn btn-outline-primary shadow-sm"><i class="bi bi-file-earmark-text me-1"></i>View Invoice</a>
     <?php else: ?>
       <form action="generate_invoice.php" method="POST" class="m-0">
+        <?= csrfField() ?>
         <input type="hidden" name="order_id" value="<?= $o['id'] ?>">
         <button type="submit" class="btn btn-primary shadow-sm" onclick="return confirm('Are you sure you want to generate an invoice for this order?')"><i class="bi bi-receipt me-1"></i>Generate Invoice</button>
       </form>

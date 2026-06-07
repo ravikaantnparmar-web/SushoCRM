@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/functions.php';
 requireLogin();
-
+requirePermission('vendors', 'delete');
 $id = (int)($_GET['id'] ?? 0);
 $stmt = db()->prepare("SELECT * FROM vendors WHERE id=?");
 $stmt->execute([$id]);

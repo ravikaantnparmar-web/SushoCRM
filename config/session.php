@@ -1,13 +1,22 @@
 <?php
 require_once __DIR__ . '/config.php';
 
+// Enforce Security Headers
+header("X-Frame-Options: SAMEORIGIN");
+header("X-Content-Type-Options: nosniff");
+header("X-XSS-Protection: 1; mode=block");
+header("Strict-Transport-Security: max-age=31536000; includeSubDomains; preload");
+header("Referrer-Policy: strict-origin-when-cross-origin");
+header("Content-Security-Policy: default-src 'self' https://cdn.jsdelivr.net https://fonts.googleapis.com https://fonts.gstatic.com 'unsafe-inline'; img-src 'self' data: https:;");
+header("Permissions-Policy: geolocation=(), microphone=(), camera=()");
+
 function startSecureSession(): void {
     if (session_status() === PHP_SESSION_NONE) {
         session_name(SESSION_NAME);
         session_set_cookie_params([
             'lifetime' => SESSION_TIMEOUT,
             'path'     => '/',
-            'secure'   => false,  // true in production (HTTPS)
+            'secure'   => true,  // Enforced HTTPS
             'httponly' => true,
             'samesite' => 'Strict',
         ]);

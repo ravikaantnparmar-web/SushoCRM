@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/functions.php';
 requireLogin();
-
+requirePermission('products', 'edit');
 $id = (int)($_GET['id'] ?? 0);
 $stmt = db()->prepare("SELECT p.*, pc.name AS category_name FROM products p LEFT JOIN product_categories pc ON p.category_id=pc.id WHERE p.id=?");
 $stmt->execute([$id]);

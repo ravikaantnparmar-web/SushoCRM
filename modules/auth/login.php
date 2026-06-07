@@ -17,46 +17,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   // CSRF check
   if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
     $error = 'Invalid request. Please refresh and try again.';
+    logActivity('auth', 'login_failed', 'CSRF token mismatch on login attempt.');
   } else {
     $email = sanitize($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
 
+    // Verify Captcha if needed
+    $requiresCaptcha = ($_SESSION['login_failures'] ?? 0) >= 3;
+    if ($requiresCaptcha) {
+        $captchaInput = sanitize($_POST['captcha'] ?? '');
+        if ($captchaInput !== (string)($_SESSION['captcha_answer'] ?? '')) {
+            $error = 'Invalid CAPTCHA answer.';
+            logActivity('auth', 'login_failed', 'CAPTCHA failed for email: ' . $email);
+        }
+    }
+
     if (empty($email) || empty($password)) {
       $error = 'Please enter your email and password.';
-    } else {
-      $stmt = db()->prepare("SELECT u.*, r.slug AS role_slug FROM users u JOIN roles r ON u.role_id=r.id WHERE u.email = ? AND u.is_active = 1 LIMIT 1");
-      $stmt->execute([$email]);
-      $user = $stmt->fetch();
+    } elseif (empty($error)) {
+      try {
+        $stmt = db()->prepare("SELECT u.*, r.slug AS role_slug FROM users u JOIN roles r ON u.role_id=r.id WHERE u.email = ? AND u.is_active = 1 LIMIT 1");
+        $stmt->execute([$email]);
+        $user = $stmt->fetch();
 
-      if ($user) {
-        // Check lockout
-        if ($user['locked_until'] && strtotime($user['locked_until']) > time()) {
-          $mins = ceil((strtotime($user['locked_until']) - time()) / 60);
-          $error = "Account locked. Try again in {$mins} minute(s).";
-        } elseif (!password_verify($password, $user['password'])) {
-          $attempts = $user['login_attempts'] + 1;
-          if ($attempts >= MAX_LOGIN_ATTEMPTS) {
-            $lockedUntil = date('Y-m-d H:i:s', time() + LOCKOUT_DURATION);
-            db()->prepare("UPDATE users SET login_attempts=?, locked_until=? WHERE id=?")->execute([$attempts, $lockedUntil, $user['id']]);
-            $error = 'Too many failed attempts. Account locked for 15 minutes.';
+        if ($user) {
+          // Check lockout
+          if ($user['locked_until'] && strtotime($user['locked_until']) > time()) {
+            $error = "Account is temporarily locked. Please try again later.";
+            logActivity('auth', 'login_failed', 'Attempted login on locked account: ' . $email);
+          } elseif (!password_verify($password, $user['password'])) {
+            $attempts = $user['login_attempts'] + 1;
+            $_SESSION['login_failures'] = ($_SESSION['login_failures'] ?? 0) + 1;
+            if ($attempts >= MAX_LOGIN_ATTEMPTS) {
+              $lockedUntil = date('Y-m-d H:i:s', time() + LOCKOUT_DURATION);
+              db()->prepare("UPDATE users SET login_attempts=?, locked_until=? WHERE id=?")->execute([$attempts, $lockedUntil, $user['id']]);
+              $error = 'Invalid email or password.';
+              logActivity('auth', 'account_locked', 'Account locked due to too many failed attempts: ' . $email);
+            } else {
+              db()->prepare("UPDATE users SET login_attempts=? WHERE id=?")->execute([$attempts, $user['id']]);
+              $error = "Invalid email or password.";
+              logActivity('auth', 'login_failed', 'Invalid password attempt for: ' . $email);
+            }
           } else {
-            db()->prepare("UPDATE users SET login_attempts=? WHERE id=?")->execute([$attempts, $user['id']]);
-            $remaining = MAX_LOGIN_ATTEMPTS - $attempts;
-            $error = "Invalid password. {$remaining} attempt(s) remaining.";
+            // Success
+            require_once __DIR__ . '/../../includes/auth.php';
+            $_SESSION['login_failures'] = 0; // reset failures
+            unset($_SESSION['captcha_answer']);
+            loginUser($user);
+            logActivity('auth', 'login_success', 'User logged in successfully: ' . $user['email']);
+            header('Location: ' . BASE_URL . '/modules/dashboard/index.php');
+            exit;
           }
         } else {
-          // Success
-          require_once __DIR__ . '/../../includes/auth.php';
-          loginUser($user);
-          logActivity('auth', 'login', 'User logged in: ' . $user['email']);
-          header('Location: ' . BASE_URL . '/modules/dashboard/index.php');
-          exit;
+          $_SESSION['login_failures'] = ($_SESSION['login_failures'] ?? 0) + 1;
+          $error = 'Invalid email or password.';
+          logActivity('auth', 'login_failed', 'Login attempt with non-existent email: ' . $email);
         }
-      } else {
-        $error = 'No active account found with this email.';
+      } catch (Exception $e) {
+          $error = 'An internal system error occurred. Please try again later.';
+          // Do not expose database errors or stack trace to the user
       }
     }
   }
+}
+
+$requiresCaptcha = ($_SESSION['login_failures'] ?? 0) >= 3;
+if ($requiresCaptcha) {
+    $num1 = rand(1, 9);
+    $num2 = rand(1, 9);
+    $_SESSION['captcha_answer'] = $num1 + $num2;
+    $captchaQuestion = "What is $num1 + $num2?";
 }
 ?>
 <!DOCTYPE html>
@@ -520,6 +550,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               <i class="bi bi-eye suffix-icon" id="eyeIcon" onclick="togglePwd()"></i>
             </div>
           </div>
+
+          <?php if ($requiresCaptcha): ?>
+          <div class="custom-input-group">
+            <label class="custom-input-label">Security Verification: <?= $captchaQuestion ?></label>
+            <div class="custom-input-wrapper">
+              <i class="bi bi-robot prefix-icon"></i>
+              <input type="text" name="captcha" class="custom-form-control" placeholder="Enter the sum" required autocomplete="off">
+            </div>
+          </div>
+          <?php endif; ?>
 
           <div class="form-extras">
             <div class="remember-me-wrap">

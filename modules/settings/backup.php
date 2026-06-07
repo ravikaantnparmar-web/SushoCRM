@@ -4,6 +4,7 @@ require_once __DIR__ . '/../../config/session.php';
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/functions.php';
+requireLogin();
 requireRole(['super_admin', 'admin']);
 
 $pageTitle = 'System Backup';

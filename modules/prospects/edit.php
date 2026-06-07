@@ -6,7 +6,7 @@ require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/functions.php';
 require_once __DIR__ . '/constants.php';
 requireLogin();
-
+requirePermission('prospects', 'edit');
 $id = (int) ($_GET['id'] ?? 0);
 if ($id <= 0) {
   header('Location: index.php');
@@ -24,12 +24,12 @@ if (!$lead) {
 }
 
 // Fetch related data
-$contacts = db()->query("SELECT * FROM lead_contacts WHERE lead_id = $id ORDER BY is_primary DESC, id ASC")->fetchAll();
-$addresses = db()->query("SELECT * FROM lead_addresses WHERE lead_id = $id ORDER BY is_primary DESC, id ASC")->fetchAll();
-$products = db()->query("SELECT product_name FROM lead_interested_products WHERE lead_id = $id")->fetchAll(PDO::FETCH_COLUMN);
-$meetings = db()->query("SELECT * FROM lead_meetings WHERE lead_id = $id ORDER BY created_at DESC")->fetchAll();
-$documents = db()->query("SELECT * FROM lead_documents WHERE lead_id = $id ORDER BY created_at DESC")->fetchAll();
-$timeline = db()->query("SELECT t.*, u.name as user_name FROM lead_timeline t LEFT JOIN users u ON t.user_id = u.id WHERE t.lead_id = $id ORDER BY t.created_at DESC")->fetchAll();
+$stmtCont = db()->prepare("SELECT * FROM lead_contacts WHERE lead_id = ? ORDER BY is_primary DESC, id ASC"); $stmtCont->execute([$id]); $contacts = $stmtCont->fetchAll();
+$stmtAddr = db()->prepare("SELECT * FROM lead_addresses WHERE lead_id = ? ORDER BY is_primary DESC, id ASC"); $stmtAddr->execute([$id]); $addresses = $stmtAddr->fetchAll();
+$stmtProd = db()->prepare("SELECT product_name FROM lead_interested_products WHERE lead_id = ?"); $stmtProd->execute([$id]); $products = $stmtProd->fetchAll(PDO::FETCH_COLUMN);
+$stmtMeet = db()->prepare("SELECT * FROM lead_meetings WHERE lead_id = ? ORDER BY created_at DESC"); $stmtMeet->execute([$id]); $meetings = $stmtMeet->fetchAll();
+$stmtDoc = db()->prepare("SELECT * FROM lead_documents WHERE lead_id = ? ORDER BY created_at DESC"); $stmtDoc->execute([$id]); $documents = $stmtDoc->fetchAll();
+$stmtTime = db()->prepare("SELECT t.*, u.name as user_name FROM lead_timeline t LEFT JOIN users u ON t.user_id = u.id WHERE t.lead_id = ? ORDER BY t.created_at DESC"); $stmtTime->execute([$id]); $timeline = $stmtTime->fetchAll();
 
 $users = getAllUsers();
 $pageTitle = 'Edit Lead: ' . $lead['lead_code'];

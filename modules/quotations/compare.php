@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/functions.php';
 requireLogin();
-
+requirePermission('quotations', 'view');
 $v1_id = (int)($_GET['v1'] ?? 0);
 $v2_id = (int)($_GET['v2'] ?? 0);
 
@@ -45,8 +45,12 @@ if ($q1['version'] > $q2['version']) {
 }
 
 // Fetch Items
-$items1 = db()->query("SELECT * FROM quotation_items WHERE quotation_id=$v1_id ORDER BY sort_order ASC")->fetchAll();
-$items2 = db()->query("SELECT * FROM quotation_items WHERE quotation_id=$v2_id ORDER BY sort_order ASC")->fetchAll();
+$stmt1 = db()->prepare("SELECT * FROM quotation_items WHERE quotation_id=? ORDER BY sort_order ASC");
+$stmt1->execute([$v1_id]);
+$items1 = $stmt1->fetchAll();
+$stmt2 = db()->prepare("SELECT * FROM quotation_items WHERE quotation_id=? ORDER BY sort_order ASC");
+$stmt2->execute([$v2_id]);
+$items2 = $stmt2->fetchAll();
 
 // Map items by description (or product_id) to compare
 $map1 = [];

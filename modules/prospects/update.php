@@ -6,7 +6,7 @@ require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/functions.php';
 require_once __DIR__ . '/constants.php';
 requireLogin();
-
+requirePermission('prospects', 'edit');
 $id = (int)($_POST['id'] ?? 0);
 if ($id <= 0) { header('Location: index.php'); exit; }
 

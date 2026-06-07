@@ -35,8 +35,8 @@ function isAdmin(): bool      { return in_array(currentRole(), ['super_admin', '
 function requireRole(array $roles): void {
     requireLogin();
     if (!in_array(currentRole(), $roles)) {
-        http_response_code(403);
-        include __DIR__ . '/../includes/403.php';
+        setFlash('danger', 'Access restricted to authorized personnel only.');
+        header('Location: ' . BASE_URL . '/modules/dashboard/index.php');
         exit;
     }
 }
@@ -44,9 +44,18 @@ function requireRole(array $roles): void {
 function hasPermission(string $module, string $action = 'view'): bool {
     $user = currentUser();
     if (!$user) return false;
-    if (isSuperAdmin()) return true;
+    if (isAdmin()) return true; // Admins and Super Admins have full access
     $permissions = json_decode($user['permissions'] ?? '{}', true);
     return isset($permissions[$module]) && in_array($action, (array)$permissions[$module]);
+}
+
+function requirePermission(string $module, string $action = 'view'): void {
+    requireLogin();
+    if (!hasPermission($module, $action)) {
+        setFlash('danger', 'You do not have permission to ' . $action . ' ' . $module . '.');
+        header('Location: ' . BASE_URL . '/modules/dashboard/index.php');
+        exit;
+    }
 }
 
 function loginUser(array $user): void {

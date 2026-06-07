@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/functions.php';
 requireLogin();
-
+requirePermission('expenses', 'view');
 $pageTitle = 'Expenses';
 $search = sanitize($_GET['search'] ?? '');
 $category = sanitize($_GET['category'] ?? '');

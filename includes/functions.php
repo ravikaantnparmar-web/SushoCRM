@@ -127,15 +127,68 @@ function paginationHtml(array $p): string {
 
 // --- File Upload ---
 function uploadFile(array $file, string $subfolder = 'misc', array $allowed = []): ?string {
-    if ($file['error'] !== UPLOAD_ERR_OK) return null;
-    if ($file['size'] > MAX_FILE_SIZE) { setFlash('danger', 'File too large (max 5MB).'); return null; }
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        logActivity('System', 'Upload Failed', 'File upload error code: ' . $file['error']);
+        return null;
+    }
+    
+    if ($file['size'] > MAX_FILE_SIZE) { 
+        setFlash('danger', 'File too large (max ' . (MAX_FILE_SIZE / 1024 / 1024) . 'MB).'); 
+        logActivity('System', 'Upload Blocked', 'File exceeded maximum size limit.');
+        return null; 
+    }
+
+    // Prevent Directory Traversal on subfolder
+    $subfolder = preg_replace('/[^a-zA-Z0-9_-]/', '', $subfolder);
+    if (empty($subfolder)) $subfolder = 'misc';
+
     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
     $allowedExts = $allowed ?: array_merge(ALLOWED_IMAGES, ALLOWED_DOCS);
-    if (!in_array($ext, $allowedExts)) { setFlash('danger', 'File type not allowed.'); return null; }
-    $dir = UPLOAD_PATH . $subfolder . '/';
-    if (!is_dir($dir)) mkdir($dir, 0755, true);
-    $filename = uniqid() . '_' . preg_replace('/[^a-z0-9_.-]/i', '_', $file['name']);
-    if (move_uploaded_file($file['tmp_name'], $dir . $filename)) return 'uploads/' . $subfolder . '/' . $filename;
+    
+    if (!in_array($ext, $allowedExts)) { 
+        setFlash('danger', 'File extension not allowed.'); 
+        logActivity('System', 'Upload Blocked', "Attempted to upload blocked extension: {$ext}");
+        return null; 
+    }
+
+    // Validate MIME type using finfo
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mimeType = $finfo->file($file['tmp_name']);
+    
+    $allowedMimes = [
+        // Images
+        'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'gif' => 'image/gif', 'webp' => 'image/webp',
+        // Docs
+        'pdf' => 'application/pdf', 'txt' => 'text/plain', 'csv' => 'text/csv',
+        'doc' => 'application/msword', 'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'xls' => 'application/vnd.ms-excel', 'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ];
+
+    if (!isset($allowedMimes[$ext]) || $allowedMimes[$ext] !== $mimeType) {
+        // Fallback for some generic text types or Edge cases, but strict by default
+        setFlash('danger', 'Invalid file content or MIME type mismatch.');
+        logActivity('System', 'Upload Blocked', "MIME type mismatch. Ext: {$ext}, MIME: {$mimeType}");
+        return null;
+    }
+
+    $dir = rtrim(UPLOAD_PATH, '/') . '/' . $subfolder . '/';
+    if (!is_dir($dir)) {
+        if (!mkdir($dir, 0755, true)) {
+            logActivity('System', 'Upload Error', "Failed to create directory: {$dir}");
+            return null;
+        }
+    }
+
+    // Use cryptographically secure random names to prevent prediction/overwrites
+    $filename = bin2hex(random_bytes(16)) . '.' . $ext;
+    $targetPath = $dir . $filename;
+
+    if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+        logActivity('System', 'Upload Success', "File uploaded successfully: {$filename}");
+        return 'uploads/' . $subfolder . '/' . $filename;
+    }
+    
+    logActivity('System', 'Upload Error', 'Failed to move uploaded file.');
     return null;
 }
 

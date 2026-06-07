@@ -5,6 +5,7 @@ require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/functions.php';
 requireLogin();
+requirePermission('reports', 'view');
 
 $pageTitle = 'Reports';
 
@@ -16,7 +17,9 @@ $profit = $sales - $expenses - $purchases;
 
 // Monthly sales for the current year
 $year = date('Y');
-$monthlySales = db()->query("SELECT MONTH(created_at) as m, SUM(total) as t FROM invoices WHERE YEAR(created_at) = '$year' AND status != 'cancelled' GROUP BY m")->fetchAll(PDO::FETCH_KEY_PAIR);
+$stmt = db()->prepare("SELECT MONTH(created_at) as m, SUM(total) as t FROM invoices WHERE YEAR(created_at) = ? AND status != 'cancelled' GROUP BY m");
+$stmt->execute([$year]);
+$monthlySales = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
 
 $monthlySalesData = [];
 for ($i=1; $i<=12; $i++) {

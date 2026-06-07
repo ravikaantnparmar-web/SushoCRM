@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/functions.php';
 requireLogin();
-
+requirePermission('customers', 'view');
 $id = (int)($_GET['id'] ?? 0);
 $stmt = db()->prepare("SELECT c.*, u.name AS created_by_name,
     (SELECT co.name FROM contacts co JOIN contact_relations cr ON co.id = cr.contact_id WHERE cr.entity_type = 'customer' AND cr.entity_id = c.id AND cr.is_primary = 1 LIMIT 1) AS primary_contact_name,

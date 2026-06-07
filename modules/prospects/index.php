@@ -6,7 +6,7 @@ require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/functions.php';
 require_once __DIR__ . '/constants.php';
 requireLogin();
-
+requirePermission('prospects', 'view');
 $pageTitle = 'Lead Management';
 $search = sanitize($_GET['search'] ?? '');
 $status = sanitize($_GET['status'] ?? '');

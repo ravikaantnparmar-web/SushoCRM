@@ -3,6 +3,8 @@ require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/session.php';
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../includes/auth.php';
+requireLogin();
+requireRole(['super_admin', 'admin']);
 require_once __DIR__ . '/../../includes/functions.php';
 
 // Only admins can download backups
