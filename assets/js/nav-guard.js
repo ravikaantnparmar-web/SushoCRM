@@ -237,35 +237,40 @@
   }
 
   function initMobileBackGuard() {
-    // We apply this to all pages, not just forms, to ensure consistent mobile exit behavior
     injectBackConfirmModal();
 
-    // Browsers ignore pushState traps on initial load if there's no user interaction.
-    // We push the state immediately, but also on the first touch/click to guarantee it sticks.
-    let statePushed = false;
-    const pushStateTrap = () => {
-      if (!statePushed) {
-        history.pushState({ navGuard: true }, '');
-        statePushed = true;
+    // Aggressive back-button trap using hash modification
+    // This bypasses mobile browser restrictions that block pushState if there is no user gesture
+    const trapHash = '#_guard';
+
+    const applyTrap = () => {
+      if (window.location.hash !== trapHash) {
+        // Replace current state so we have a clean base, then push the trap
+        history.replaceState({ base: true }, '', window.location.pathname + window.location.search);
+        history.pushState({ navGuard: true }, '', trapHash);
       }
     };
 
-    pushStateTrap(); // Try immediately
-    document.addEventListener('touchstart', pushStateTrap, { once: true, passive: true });
-    document.addEventListener('click', pushStateTrap, { once: true, passive: true });
-    document.addEventListener('scroll', pushStateTrap, { once: true, passive: true });
+    // Apply trap immediately on page load
+    applyTrap();
+
+    // Also re-apply on interaction just to be absolutely certain
+    document.addEventListener('touchstart', applyTrap, { once: true, passive: true });
+    document.addEventListener('click', applyTrap, { once: true, passive: true });
 
     window.addEventListener('popstate', function(e) {
       if (formSubmitting || window.navGuardAllowBack) return;
 
-      // Intercept the back button and maintain the trap
-      history.pushState({ navGuard: true }, '');
+      // If they pressed back, the hash was removed. We must immediately put it back to maintain the trap.
+      if (window.location.hash !== trapHash) {
+        history.pushState({ navGuard: true }, '', trapHash);
+      }
 
       const msg = document.getElementById('backModalMsg');
       if (isDirty()) {
-        msg.innerHTML = '<span class="text-danger fw-semibold"><i class="bi bi-exclamation-triangle me-1"></i>You have unsaved changes!</span><br>Are you sure you want to exit without saving?';
+        msg.innerHTML = '<span class="text-danger fw-semibold"><i class="bi bi-exclamation-triangle me-1"></i>You have unsaved changes!</span><br>Are you sure you want to leave without saving?';
       } else {
-        msg.innerHTML = 'Are you sure you want to exit the application?';
+        msg.innerHTML = 'Are you sure you want to go back?';
       }
 
       const modal = new bootstrap.Modal(document.getElementById('navGuardBackModal'));
