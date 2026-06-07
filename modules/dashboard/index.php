@@ -719,7 +719,7 @@ new Chart(rCtx, {
     plugins: { legend: { display: false } },
     scales: {
       y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.05)' },
-           ticks: { callback: v => '₹' + (v >= 100000 ? (v/100000)+'L' : (v >= 1000 ? (v/1000)+'k' : v)) } },
+           ticks: { callback: v => '\u20B9' + (v >= 100000 ? (v/100000)+'L' : (v >= 1000 ? (v/1000)+'k' : v)) } },
       x: { grid: { display: false } }
     }
   }
