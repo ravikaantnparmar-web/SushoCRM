@@ -1143,31 +1143,6 @@ function fetchLocationForCard(btn) {
           // Show full address in the search input as well
           gSearch.value = address;
 
-          // Auto-fill standard inputs if empty
-          const details = data.address || {};
-          if (details.road && !line1Input.value) {
-            line1Input.value = (details.house_number ? details.house_number + ", " : "") + details.road;
-          }
-          if (details.suburb && !areaInput.value) {
-            areaInput.value = details.suburb;
-          } else if (details.neighbourhood && !areaInput.value) {
-            areaInput.value = details.neighbourhood;
-          }
-          if ((details.city || details.town || details.village) && !cityInput.value) {
-            cityInput.value = details.city || details.town || details.village;
-          }
-          if (details.postcode && !pincodeInput.value) {
-            pincodeInput.value = details.postcode;
-          }
-          if (details.state && stateSelect) {
-            const stateVal = details.state;
-            Array.from(stateSelect.options).forEach(opt => {
-              if (opt.value.toLowerCase() === stateVal.toLowerCase() || stateVal.toLowerCase().includes(opt.value.toLowerCase())) {
-                stateSelect.value = opt.value;
-              }
-            });
-          }
-
           // Update Preview with full address
           preview.classList.remove('d-none');
           previewText.textContent = address;
