@@ -280,14 +280,14 @@ include __DIR__ . '/../../includes/header.php';
             <div class="col-12">
               <label class="form-label">Approved Budget</label>
               <div class="input-group">
-                <span class="input-group-text"><?= CURRENCY_SYMBOL ?></span>
+                <span class="input-group-text">&#8377;</span>
                 <input type="number" name="budget" class="form-control" value="<?= e($p['budget']) ?>" step="0.01" min="0">
               </div>
             </div>
             <div class="col-12">
               <label class="form-label">Project Cost (Estimated)</label>
               <div class="input-group">
-                <span class="input-group-text"><?= CURRENCY_SYMBOL ?></span>
+                <span class="input-group-text">&#8377;</span>
                 <input type="number" name="project_cost" class="form-control" value="<?= e($p['project_cost']) ?>" step="0.01" min="0">
               </div>
             </div>

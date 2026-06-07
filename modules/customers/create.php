@@ -295,7 +295,7 @@ include __DIR__ . '/../../includes/header.php';
           </select>
         </div>
         <div class="mb-3">
-          <label class="form-label">Credit Limit (<?= CURRENCY_SYMBOL ?>)</label>
+          <label class="form-label">Credit Limit (&#8377;)</label>
           <input type="number" name="credit_limit" class="form-control" min="0" step="0.01" value="<?= e($_POST['credit_limit']??'0') ?>">
         </div>
       </div>

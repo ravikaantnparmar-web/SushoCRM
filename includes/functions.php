@@ -12,7 +12,7 @@ function sanitize(?string $str): string {
 }
 
 function formatCurrency(float $amount): string {
-    return CURRENCY_SYMBOL . ' ' . number_format($amount, 2);
+    return '₹' . ' ' . number_format($amount, 2);
 }
 
 function formatDate(string $date, string $format = 'd M Y'): string {
