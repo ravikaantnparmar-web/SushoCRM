@@ -480,7 +480,82 @@ include __DIR__ . '/../../includes/header.php';
           <i class="bi bi-chevron-up ls-toggle ms-2"></i>
         </div>
         <div class="ls-card-body" style="padding: 10px; background: #f9fafb;" id="addresses-container">
-          <!-- Addresses inserted by JS -->
+          <!-- First address pre-rendered by PHP for guaranteed display -->
+          <div class="address-card p-3 bg-white border rounded mb-3 position-relative shadow-sm" data-address-index="0">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label text-orange"><i class="bi bi-tag-fill me-1"></i>Address Type</label>
+                <select class="form-select address-type-input" name="addresses[0][address_type]">
+                  <option value="">Select Type</option>
+                  <?php foreach(isset($addressTypes)&&is_array($addressTypes)?$addressTypes:[] as $at): ?>
+                  <option value="<?= e($at) ?>" <?= $at==='Site Address'?'selected':'' ?>><?= e($at) ?></option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+              <div class="col-md-8">
+                <div class="d-flex align-items-center h-100 pt-4">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input primary-address-check" type="checkbox" role="switch" name="addresses[0][is_primary]" value="1" checked onchange="handlePrimaryAddress(this)">
+                    <label class="form-check-label text-muted" style="font-size:12px;">Set as Primary Address</label>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Address Line 1</label>
+                <input type="text" class="form-control addr-line1" name="addresses[0][address_line1]" placeholder="House / Flat / Building No.">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Address Line 2</label>
+                <input type="text" class="form-control addr-line2" name="addresses[0][address_line2]" placeholder="Street, Road, Colony">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Area</label>
+                <input type="text" class="form-control addr-area" name="addresses[0][area]" placeholder="Area / Locality">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">City</label>
+                <input type="text" class="form-control addr-city" name="addresses[0][city]" placeholder="City">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">State</label>
+                <select class="form-select addr-state" name="addresses[0][state]">
+                  <option value="">Select State</option>
+                  <?php foreach(['Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat','Haryana','Himachal Pradesh','Jammu and Kashmir','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal','Delhi','Ladakh','Puducherry','Chandigarh','Dadra and Nagar Haveli','Daman and Diu','Lakshadweep','Andaman and Nicobar Islands'] as $st): ?>
+                  <option value="<?= e($st) ?>"><?= e($st) ?></option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label">Pincode</label>
+                <input type="text" class="form-control addr-pincode" name="addresses[0][pincode]" placeholder="000000" maxlength="6" pattern="[0-9]{6}">
+              </div>
+              <div class="col-12"><div class="ls-sub-label">Google Map Location (Optional)</div></div>
+              <div class="col-12">
+                <div class="d-flex align-items-center gap-2">
+                  <div class="input-group shadow-sm" style="flex:1 1 0;min-width:0;">
+                    <span class="input-group-text bg-white border-end-0 pe-1"><i class="bi bi-geo-alt-fill text-danger" style="font-size:13px;"></i></span>
+                    <input type="text" class="form-control addr-gsearch border-start-0" placeholder="Search address or click Locate Me to use GPS...">
+                    <button type="button" class="btn btn-outline-primary btn-fetch-location d-flex align-items-center gap-1 px-3" onclick="fetchLocationForCard(this)" title="Fetch Current Location">
+                      <i class="bi bi-geo-fill"></i> <span class="small fw-semibold">Locate Me</span>
+                    </button>
+                  </div>
+                  <div class="addr-preview-container d-none flex-shrink-0" style="max-width:42%;">
+                    <div class="p-2 bg-light rounded border small d-flex align-items-center gap-1">
+                      <i class="bi bi-check-circle-fill text-success flex-shrink-0"></i>
+                      <span class="addr-preview-text text-success fw-medium text-truncate" style="max-width:130px;"></span>
+                      <a href="#" target="_blank" class="btn btn-sm btn-outline-success addr-preview-map-link flex-shrink-0 d-none" style="font-size:10px;padding:2px 6px;white-space:nowrap;"><i class="bi bi-map-fill me-1"></i>Map</a>
+                      <a href="#" target="_blank" class="btn btn-sm btn-outline-primary addr-preview-dir-link flex-shrink-0" style="font-size:10px;padding:2px 6px;white-space:nowrap;"><i class="bi bi-cursor-fill me-1"></i>Directions</a>
+                    </div>
+                  </div>
+                </div>
+                <input type="hidden" class="addr-gaddress" name="addresses[0][google_address]">
+                <input type="hidden" class="addr-glink" name="addresses[0][google_maps_link]">
+                <input type="hidden" class="addr-lat" name="addresses[0][lat]">
+                <input type="hidden" class="addr-lng" name="addresses[0][lng]">
+                <input type="hidden" class="addr-gcode" name="addresses[0][google_location]">
+              </div>
+            </div>
+          </div>
         </div>
       </div><!-- /address -->      <!-- ─── SECTION 4: CONTACT PERSONS ─── -->
       <div class="ls-card">
@@ -488,7 +563,7 @@ include __DIR__ . '/../../includes/header.php';
           <div class="sec-ico ico-purple"><i class="bi bi-people-fill"></i></div>
           <h6>Contact Person Management</h6>
           <span class="badge ms-2" style="background:#9333ea;font-size:10px;" id="contact-count-badge">
-            1 Contact
+            0 Contacts
           </span>
           <div class="ms-auto d-flex gap-2" onclick="event.stopPropagation()">
             <button type="button" class="btn btn-sm btn-outline-primary" onclick="showAddContactModal()"
@@ -999,7 +1074,8 @@ function clearGoogleLocation() {
 
 // Init removed since we use Modal now
 
-let addressCount = 0;
+// addressCount starts at 1 because index 0 is pre-rendered by PHP
+let addressCount = 1;
 function addAddress(isPrimary = false) {
   const tpl = document.getElementById('address-tpl');
   const clone = tpl.content.cloneNode(true);
@@ -1194,7 +1270,7 @@ function fetchLocationForCard(btn) {
 }
 
 // Init: add first primary address on page load
-try { addAddress(true); } catch(e) { console.error('addAddress init failed:', e); }
+// First address card is pre-rendered by PHP — no JS init needed
 
 function showAddContactModal() {
   document.getElementById('contactForm').reset();
