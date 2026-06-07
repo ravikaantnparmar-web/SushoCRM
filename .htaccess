@@ -10,9 +10,9 @@ ServerSignature Off
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # Force HTTPS (enable on Hostinger)
-    # RewriteCond %{HTTPS} off
-    # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+    # Force HTTPS (enabled for Hostinger production)
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
     # Block access to config, includes directories
     RewriteRule ^config/.*$   - [F,L]
