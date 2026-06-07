@@ -574,7 +574,7 @@ include __DIR__ . '/../../includes/header.php';
   <div class="page-content pb-0">
     <?= flashHtml() ?>
 
-    <form id="lead-edit-form" action="update.php" method="POST" enctype="multipart/form-data" novalidate>
+    <form id="lead-edit-form" action="update.php" method="POST" enctype="multipart/form-data" novalidate data-guard data-autosave>
       <input type="hidden" name="id" value="<?= $id ?>">
 
       <!-- Top strip with title + action buttons -->

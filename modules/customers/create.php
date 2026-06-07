@@ -169,7 +169,7 @@ include __DIR__ . '/../../includes/header.php';
   <div class="alert alert-danger"><ul class="mb-0"><?php foreach($errors as $e) echo '<li>'.htmlspecialchars($e).'</li>'; ?></ul></div>
 <?php endif; ?>
 
-<form method="POST" novalidate>
+<form method="POST" novalidate data-guard data-autosave>
   <?= csrfField() ?>
   <input type="hidden" name="source_lead_id" value="<?= e($sourceLeadId ?? '') ?>">
   <div class="row g-4">

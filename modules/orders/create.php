@@ -131,7 +131,7 @@ include __DIR__ . '/../../includes/header.php';
   </div>
   <a href="<?= BASE_URL ?>/modules/orders/index.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back</a>
 </div>
-<form method="POST" id="orderForm">
+<form method="POST" id="orderForm" data-guard data-autosave>
   <div class="row g-3">
     <div class="col-lg-8">
       <div class="crm-form-section">

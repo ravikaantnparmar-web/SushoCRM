@@ -49,5 +49,15 @@ document.addEventListener("DOMContentLoaded", function() {
 <?php if (isset($extraScripts)): ?>
   <?= $extraScripts ?>
 <?php endif; ?>
+
+<!-- Navigation Protection -->
+<script>
+window.CRM_CONFIG = {
+  baseUrl:        '<?= BASE_URL ?>',
+  sessionTimeout: <?= SESSION_TIMEOUT ?>,
+  userId:         <?= json_encode($_SESSION['user_id'] ?? null) ?>
+};
+</script>
+<script src="<?= BASE_URL ?>/assets/js/nav-guard.js?v=<?= filemtime(__DIR__.'/../assets/js/nav-guard.js') ?>"></script>
 </body>
 </html>

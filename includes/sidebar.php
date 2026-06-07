@@ -138,7 +138,7 @@ $user = currentUser();
     <a href="<?= BASE_URL ?>/modules/auth/change-password.php" class="menu-item <?= isActive('/auth/change-password') ?>">
       <i class="bi bi-shield-lock"></i><span>Change Password</span>
     </a>
-    <a href="<?= BASE_URL ?>/modules/auth/logout.php" class="menu-item menu-item-logout">
+    <a href="<?= BASE_URL ?>/modules/auth/logout.php" id="logoutLink" class="menu-item menu-item-logout">
       <i class="bi bi-box-arrow-left"></i><span>Logout</span>
     </a>
   </div>

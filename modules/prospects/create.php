@@ -227,7 +227,7 @@ include __DIR__ . '/../../includes/header.php';
 <div class="page-content pb-0">
   <?= flashHtml() ?>
 
-  <form id="lead-create-form" action="save.php" method="POST" enctype="multipart/form-data" novalidate>
+  <form id="lead-create-form" action="save.php" method="POST" enctype="multipart/form-data" novalidate data-guard data-autosave>
 
   <!-- Top strip -->
   <div class="lead-edit-topstrip">
