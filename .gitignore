@@ -1,2 +1,20 @@
 /backups/
 /scratch/
+
+# Ignore uploaded files but keep directory structure via .gitkeep placeholders
+uploads/contacts/cards/*
+uploads/contacts/*
+!uploads/contacts/cards/.gitkeep
+!uploads/contacts/.gitkeep
+uploads/leads/cards/*
+uploads/leads/*
+!uploads/leads/cards/.gitkeep
+!uploads/leads/.gitkeep
+uploads/products/*
+!uploads/products/.gitkeep
+uploads/projects/*
+!uploads/projects/.gitkeep
+uploads/expenses/*
+!uploads/expenses/.gitkeep
+uploads/misc/*
+!uploads/misc/.gitkeep

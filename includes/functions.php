@@ -138,8 +138,10 @@ function uploadFile(array $file, string $subfolder = 'misc', array $allowed = []
         return null; 
     }
 
-    // Prevent Directory Traversal on subfolder
-    $subfolder = preg_replace('/[^a-zA-Z0-9_-]/', '', $subfolder);
+    // Prevent Directory Traversal on subfolder — allow '/' for nested paths like 'leads/cards'
+    $subfolder = preg_replace('/[^a-zA-Z0-9_\-\/]/', '', $subfolder); // allow slash
+    $subfolder = preg_replace('/\/+/', '/', trim($subfolder, '/')); // normalise slashes
+    $subfolder = preg_replace('/\.\./', '', $subfolder);             // block traversal
     if (empty($subfolder)) $subfolder = 'misc';
 
     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
