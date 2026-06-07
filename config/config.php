@@ -9,7 +9,12 @@ define('COMPANY_PHONE', '+91 9898549909');
 define('COMPANY_ADDRESS', 'A-102, Swagat Status 2, Off New CG Road, Chandkheda, Ahmedabad - 382424');
 define('COMPANY_GST', '29ABCDE1234F1Z5');
 define('COMPANY_WEBSITE', 'https://www.sushobha.com');
-define('BASE_URL', 'http://localhost/SushobhaCRM');
+$protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? "https" : "http";
+if ($_SERVER['HTTP_HOST'] === 'localhost' || $_SERVER['HTTP_HOST'] === '127.0.0.1') {
+    define('BASE_URL', $protocol . '://localhost/SushobhaCRM');
+} else {
+    define('BASE_URL', $protocol . '://' . $_SERVER['HTTP_HOST']);
+}
 define('CURRENCY_SYMBOL', '₹');
 define('CURRENCY_CODE', 'INR');
 define('TAX_NAME', 'GST');
