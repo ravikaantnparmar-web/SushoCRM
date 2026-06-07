@@ -949,7 +949,7 @@ include __DIR__ . '/../../includes/header.php';
               </span>
               <!-- Action buttons in header -->
               <div class="ms-auto d-flex gap-2" onclick="event.stopPropagation()">
-                <button type="button" class="btn btn-sm btn-outline-primary" onclick="addContact()"
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="showAddContactModal()"
                   style="font-size:12px;">
                   <i class="bi bi-plus-lg me-1"></i>Add Contact
                 </button>
@@ -961,92 +961,84 @@ include __DIR__ . '/../../includes/header.php';
               <i class="bi bi-chevron-up ls-toggle ms-2"></i>
             </div>
             <div class="ls-card-body" style="padding:0;">
-              <div class="contact-table-wrap">
-                <table class="contact-table">
+              <div class="table-responsive">
+                <table class="table table-hover table-contacts mb-0">
                   <thead>
                     <tr>
                       <th>Name</th>
-                      <th>Email</th>
-                      <th>Mobile</th>
-                      <th>WhatsApp</th>
-                      <th class="text-center">Visiting Card</th>
-                      <th>Primary</th>
-                      <th></th>
+                      <th>Type</th>
+                      <th>Contact Details</th>
+                      <th>Visiting Card</th>
+                      <th style="width: 100px;">Actions</th>
                     </tr>
                   </thead>
-                  <tbody id="contacts-tbody">
-                    <?php foreach ($contacts as $idx => $c): ?>
-                      <tr class="contact-row <?= $c['is_primary'] ? 'contact-primary-row' : '' ?>"
-                        data-contact-index="<?= $idx ?>">
-                        <td>
-                          <input type="hidden" name="contacts[<?= $idx ?>][master_contact_id]" value="<?= (int)$c['id'] ?>">
-                          <input type="hidden" name="contacts[<?= $idx ?>][type]" value="<?= e($c['relation_role'] ?? $c['contact_type'] ?? 'Owner') ?>">
-                          <input type="hidden" class="contact-existing-cards-input"
-                            name="contacts[<?= $idx ?>][existing_card]" value="<?= e($c['visiting_card']) ?>">
-                          <input type="text" name="contacts[<?= $idx ?>][name]" class="form-control contact-name-input"
-                            placeholder="Full name" value="<?= e($c['name']) ?>">
-                        </td>
-                        <td>
-                          <input type="email" name="contacts[<?= $idx ?>][email]" class="form-control contact-email-input"
-                            placeholder="email@domain.com" value="<?= e($c['email']) ?>">
-                        </td>
-                        <td>
-                          <input type="tel" name="contacts[<?= $idx ?>][mobile]" class="form-control contact-mobile-input"
-                            placeholder="Mobile" value="<?= e($c['mobile']) ?>">
-                        </td>
-                        <td>
-                          <input type="tel" name="contacts[<?= $idx ?>][whatsapp]"
-                            class="form-control contact-whatsapp-input" placeholder="WhatsApp"
-                            value="<?= e($c['whatsapp']) ?>">
-                        </td>
-                        <td class="text-center">
-                          <div class="d-flex align-items-center justify-content-center gap-2">
-                            <label class="btn btn-sm btn-outline-primary p-1 px-2 mb-0" style="cursor: pointer;"
-                              title="Upload Visiting Card">
-                              <i class="bi bi-card-image"></i>
-                              <input type="file" name="contacts[<?= $idx ?>][card_file][]"
-                                class="d-none contact-card-file-input" multiple accept="image/*"
-                                onchange="previewRowContactCard(this, <?= $idx ?>)">
-                            </label>
-                            <div class="contact-card-previews d-flex gap-1" id="contact_card_previews_<?= $idx ?>">
-                              <?php
-                              if (!empty($c['visiting_card'])):
-                                $cards = json_decode($c['visiting_card'], true) ?: [];
-                                foreach ($cards as $cIdx => $card):
-                                  ?>
-                                  <div class="saved-doc-thumb position-relative"
-                                    style="width: 45px; height: 32px; border-radius: 4px; overflow: hidden;"
-                                    id="saved_card_<?= $idx ?>_<?= $cIdx ?>">
-                                    <a href="<?= BASE_URL ?>/<?= e($card) ?>" target="_blank"
-                                      class="visiting-card-thumb-link w-100 h-100 d-block">
-                                      <img src="<?= BASE_URL ?>/<?= e($card) ?>"
-                                        style="width: 100%; height: 100%; object-fit: cover;">
-                                    </a>
-                                    <button type="button"
-                                      class="btn btn-danger p-0 border-0 position-absolute d-flex align-items-center justify-content-center"
-                                      style="top: 0; right: 0; width: 14px; height: 14px; font-size: 8px; border-radius: 0 0 0 4px; background: rgba(220, 53, 69, 0.9);"
-                                      onclick="removeSavedRowCard(<?= $idx ?>, <?= $cIdx ?>, '<?= e($card) ?>')">
-                                      <i class="bi bi-x"></i>
-                                    </button>
-                                  </div>
-                                <?php endforeach; endif; ?>
-                            </div>
+                  <tbody>
+                    <?php foreach($contacts as $c): ?>
+                    <tr>
+                      <td>
+                        <div class="fw-bold"><?= e($c['name']) ?> <?= $c['is_primary']?'<span class="badge bg-primary ms-1" style="font-size:9px;">PRIMARY</span>':'' ?></div>
+                      </td>
+                      <td><span class="badge bg-light text-dark border"><?= e($c['contact_type'] ?? $c['relation_role'] ?? 'Owner') ?></span></td>
+                      <td>
+                        <?php if($c['mobile']): ?>
+                          <div class="small"><i class="bi bi-telephone text-muted me-1"></i><a href="tel:<?= e($c['mobile']) ?>"><?= e($c['mobile']) ?></a></div>
+                        <?php endif; ?>
+                        <?php if($c['whatsapp']): ?>
+                          <div class="small"><i class="bi bi-whatsapp text-success me-1"></i><a href="https://wa.me/<?= preg_replace('/[^0-9]/','',$c['whatsapp']) ?>" target="_blank" class="text-success"><?= e($c['whatsapp']) ?></a></div>
+                        <?php endif; ?>
+                        <?php if($c['email']): ?>
+                          <div class="small"><i class="bi bi-envelope text-muted me-1"></i><a href="mailto:<?= e($c['email']) ?>"><?= e($c['email']) ?></a></div>
+                        <?php endif; ?>
+
+                        <?php if(!empty($c['organization_name']) || !empty($c['city']) || !empty($c['website'])): ?>
+                          <div class="mt-2 pt-2 border-top border-light">
+                            <?php if($c['organization_name']): ?>
+                              <div class="small text-muted"><i class="bi bi-building me-1"></i><strong><?= e($c['organization_name']) ?></strong></div>
+                            <?php endif; ?>
+                            <?php if($c['address'] || $c['city'] || $c['state'] || $c['pincode']): ?>
+                              <div class="small text-muted" style="font-size:11px;">
+                                <i class="bi bi-geo-alt me-1"></i>
+                                <?= implode(', ', array_filter([e($c['address']), e($c['city']), e($c['state']), e($c['pincode'])])) ?>
+                              </div>
+                            <?php endif; ?>
+                            <?php if($c['website']): ?>
+                              <div class="small"><i class="bi bi-globe text-muted me-1"></i><a href="<?= e($c['website']) ?>" target="_blank" class="text-decoration-none" style="font-size:11px;">Website</a></div>
+                            <?php endif; ?>
                           </div>
-                        </td>
-                        <td class="text-center">
-                          <input class="form-check-input primary-check" type="checkbox"
-                            name="contacts[<?= $idx ?>][is_primary]" value="1" <?= $c['is_primary'] ? 'checked' : '' ?>>
-                        </td>
-                        <td>
-                          <?php if ($idx > 0): ?>
-                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeContact(this)"
-                              style="font-size:11px;padding:3px 8px;">
-                              <i class="bi bi-trash"></i>
-                            </button>
+                        <?php endif; ?>
+                      </td>
+                      <td>
+                        <?php 
+                        if($c['visiting_card']): 
+                          $cards = json_decode($c['visiting_card'], true) ?: [];
+                          if (!empty($cards)):
+                        ?>
+                        <div class="d-flex gap-1 flex-wrap">
+                          <?php foreach($cards as $card): ?>
+                            <a href="<?= BASE_URL ?>/<?= e($card) ?>" target="_blank" class="visiting-card-thumb-link">
+                              <img src="<?= BASE_URL ?>/<?= e($card) ?>" class="rounded border" style="width: 50px; height: 35px; object-fit: cover;" alt="Visiting Card">
+                            </a>
+                          <?php endforeach; ?>
+                        </div>
+                        <?php else: echo '-'; endif; else: echo '-'; endif; ?>
+                      </td>
+                      <td>
+                        <div class="d-flex flex-column gap-1">
+                          <div class="d-flex gap-1">
+                            <a href="<?= BASE_URL ?>/modules/contacts/view.php?id=<?= $c['id'] ?>" class="btn btn-outline-info btn-sm px-2 py-1" title="View Profile"><i class="bi bi-eye"></i></a>
+                            <button type="button" class="btn btn-outline-primary btn-sm px-2 py-1" onclick="editContactById(<?= $c['id'] ?>)" title="Edit"><i class="bi bi-pencil"></i></button>
+                            <button type="button" class="btn btn-outline-danger btn-sm px-2 py-1" onclick="deleteContact(<?= $c['id'] ?>)" title="Delete"><i class="bi bi-trash"></i></button>
+                          </div>
+                          <?php if(!$c['is_primary']): ?>
+                            <button type="button" class="btn btn-sm btn-outline-secondary px-2 py-1" onclick="setPrimaryContact(<?= $c['id'] ?>)" style="font-size: 10px;">Set as Primary</button>
                           <?php endif; ?>
-                        </td>
-                      </tr>
+                        </div>
+                      </td>
+                    </tr>
                     <?php endforeach; ?>
+                    <?php if(empty($contacts)): ?>
+                    <tr><td colspan="5" class="text-center text-muted py-3">No contacts found. Please add a contact person.</td></tr>
+                    <?php endif; ?>
                   </tbody>
                 </table>
               </div>
@@ -1312,44 +1304,6 @@ include __DIR__ . '/../../includes/header.php';
 
 <?php include __DIR__ . '/../../includes/contact_modal_ui.php'; ?>
 
-<!-- CONTACT ROW TEMPLATE -->
-<template id="contact-tpl">
-  <tr class="contact-row" data-contact-index="">
-    <td>
-      <input type="hidden" name="" class="contact-id-input">
-      <input type="hidden" name="" class="contact-contact-type-input">
-      <input type="hidden" name="" class="contact-organization-name-input">
-      <input type="hidden" name="" class="contact-website-input">
-      <input type="hidden" name="" class="contact-address-input">
-      <input type="hidden" name="" class="contact-city-input">
-      <input type="hidden" name="" class="contact-state-input">
-      <input type="hidden" name="" class="contact-pincode-input">
-      <input type="hidden" name="" class="contact-existing-cards-input">
-      <input type="text" name="" class="form-control contact-name-input" placeholder="Full name">
-      <div class="contact-file-inputs-container d-none"></div>
-    </td>
-    <td><input type="email" name="" class="form-control contact-email-input" placeholder="email@domain.com"></td>
-    <td><input type="tel" name="" class="form-control contact-mobile-input" placeholder="Mobile"></td>
-    <td><input type="tel" name="" class="form-control contact-whatsapp-input" placeholder="WhatsApp"></td>
-    <td class="text-center">
-      <div class="d-flex align-items-center justify-content-center gap-2">
-        <label class="btn btn-sm btn-outline-primary p-1 px-2 mb-0" style="cursor: pointer;" title="Upload Visiting Card">
-          <i class="bi bi-card-image"></i>
-          <input type="file" name="" class="d-none contact-card-file-input" multiple accept="image/*">
-        </label>
-        <div class="contact-card-previews d-flex gap-1"></div>
-      </div>
-    </td>
-    <td class="text-center"><input class="form-check-input primary-check" type="checkbox" name="" value="1"></td>
-    <td>
-      <button type="button" class="btn btn-sm btn-outline-danger remove-btn"
-              onclick="removeContact(this)" style="font-size:11px;padding:3px 8px;">
-        <i class="bi bi-trash"></i>
-      </button>
-    </td>
-  </tr>
-</template>
-
 <!-- ADDRESS CARD TEMPLATE -->
 <template id="address-tpl">
   <div class="address-card p-3 bg-white border rounded mb-3 position-relative shadow-sm">
@@ -1463,12 +1417,212 @@ include __DIR__ . '/../../includes/header.php';
     font-size: 10px;
     font-weight: 700;
   }
-
-  /* contact-primary-row styling is defined in the main style block above */
 </style>
 
 <script>
-  let contactCount = <?= count($contacts) ?>;
+// --- Global Data for Contacts ---
+const leadContacts = <?= json_encode($contacts) ?>;
+
+function editContactById(id) {
+    const c = leadContacts.find(item => parseInt(item.id) === parseInt(id));
+    if (c) {
+        document.getElementById('contact_form_mode').value = 'update';
+        showEditContactModal(c);
+    }
+}
+
+function showAddContactModal() {
+    document.getElementById('contactForm').reset();
+    document.getElementById('contact_id').value = '';
+    document.getElementById('contact_form_mode').value = 'create';
+    document.getElementById('contactModalLabel').textContent = 'Add Contact';
+    document.getElementById('existing_cards_preview').innerHTML = '';
+    document.getElementById('visiting_cards_new_preview').innerHTML = '';
+    
+    Array.from(document.getElementById('contactForm').elements).forEach(el => el.disabled = false);
+    
+    new bootstrap.Modal(document.getElementById('contactModal')).show();
+}
+
+function showEditContactModal(c) {
+    document.getElementById('contactForm').reset();
+    document.getElementById('contact_id').value = c.id;
+    document.getElementById('visiting_cards_new_preview').innerHTML = '';
+    document.getElementById('contactModalLabel').textContent = 'Edit Contact';
+    
+    document.getElementById('contact_name').value = c.name || '';
+    if(c.contact_type) document.getElementById('contact_contact_type').value = c.contact_type;
+    document.getElementById('contact_mobile').value = c.mobile || '';
+    document.getElementById('contact_whatsapp').value = c.whatsapp || '';
+    document.getElementById('contact_email').value = c.email || '';
+    
+    document.getElementById('contact_organization_name').value = c.organization_name || '';
+    document.getElementById('contact_website').value = c.website || '';
+    document.getElementById('contact_address').value = c.address || '';
+    document.getElementById('contact_city').value = c.city || '';
+    document.getElementById('contact_state').value = c.state || '';
+    document.getElementById('contact_pincode').value = c.pincode || '';
+    
+    document.getElementById('contact_existing_cards').value = c.visiting_card || '';
+    
+    const previewDiv = document.getElementById('existing_cards_preview');
+    previewDiv.innerHTML = '';
+    if (c.visiting_card) {
+        const cards = JSON.parse(c.visiting_card) || [];
+        cards.forEach((card, index) => {
+            const wrap = document.createElement('div');
+            wrap.className = 'position-relative d-inline-block border rounded p-1';
+            wrap.style.width = '70px';
+            wrap.innerHTML = `
+                <img src="<?= BASE_URL ?>/${card}" style="width: 100%; height: 45px; object-fit: cover;" class="rounded">
+                <button type="button" class="btn btn-danger btn-xs position-absolute top-0 end-0 p-0 d-flex align-items-center justify-content-center" 
+                        style="width: 16px; height: 16px; font-size: 10px; line-height: 1; border-radius: 50%;" 
+                        onclick="removeExistingCard(${index})">&times;</button>
+            `;
+            previewDiv.appendChild(wrap);
+        });
+    }
+
+    new bootstrap.Modal(document.getElementById('contactModal')).show();
+}
+
+function removeExistingCard(index) {
+    const input = document.getElementById('contact_existing_cards');
+    if (input.value) {
+        const cards = JSON.parse(input.value) || [];
+        cards.splice(index, 1);
+        input.value = JSON.stringify(cards);
+        
+        const previewDiv = document.getElementById('existing_cards_preview');
+        previewDiv.innerHTML = '';
+        cards.forEach((card, idx) => {
+            const wrap = document.createElement('div');
+            wrap.className = 'position-relative d-inline-block border rounded p-1';
+            wrap.style.width = '70px';
+            wrap.innerHTML = `
+                <img src="<?= BASE_URL ?>/${card}" style="width: 100%; height: 45px; object-fit: cover;" class="rounded">
+                <button type="button" class="btn btn-danger btn-xs position-absolute top-0 end-0 p-0 d-flex align-items-center justify-content-center" 
+                        style="width: 16px; height: 16px; font-size: 10px; line-height: 1; border-radius: 50%;" 
+                        onclick="removeExistingCard(${idx})">&times;</button>
+            `;
+            previewDiv.appendChild(wrap);
+        });
+    }
+}
+
+document.getElementById('contactForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('contactSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
+
+    const id = document.getElementById('contact_id').value;
+    const mode = document.getElementById('contact_form_mode').value;
+    const url = (id && mode !== 'link_existing') ? 'update_contact_ajax.php' : 'add_contact_ajax.php';
+    
+    Array.from(this.elements).forEach(el => { el.disabled = false; });
+    const formData = new FormData(this);
+
+    fetch(url, {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === 'success') {
+            window.location.reload();
+        } else if (data.status === 'duplicate') {
+            if (confirm(data.message + "\n\nWould you like to link the existing contact (" + data.contact.name + ") to this lead instead?")) {
+                let linkFormData = new FormData();
+                linkFormData.append('id', data.contact.id);
+                linkFormData.append('lead_id', document.querySelector('input[name="id"]').value);
+                let ctEl = document.querySelector('[name="contact_type"]');
+                linkFormData.append('contact_type', ctEl ? ctEl.value : 'Owner');
+                linkFormData.append('mode', 'link_existing');
+                
+                fetch('add_contact_ajax.php', {
+                    method: 'POST',
+                    body: linkFormData
+                })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.status === 'success') {
+                        window.location.reload();
+                    } else {
+                        alert(d.message);
+                        btn.disabled = false;
+                        btn.textContent = 'Save Contact';
+                    }
+                })
+                .catch(e => {
+                    alert('Failed to link contact.');
+                    btn.disabled = false;
+                    btn.textContent = 'Save Contact';
+                });
+            } else {
+                btn.disabled = false;
+                btn.textContent = 'Save Contact';
+            }
+        } else {
+            alert(data.message || 'An error occurred.');
+            btn.disabled = false;
+            btn.textContent = 'Save Contact';
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Failed to connect to the server.');
+        btn.disabled = false;
+        btn.textContent = 'Save Contact';
+    });
+});
+
+function deleteContact(id) {
+    if (confirm('Are you sure you want to delete this contact?')) {
+        const formData = new FormData();
+        formData.append('id', id);
+
+        fetch('delete_contact_ajax.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                window.location.reload();
+            } else {
+                alert(data.message || 'An error occurred.');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Failed to delete contact.');
+        });
+    }
+}
+
+function setPrimaryContact(contactId) {
+    const formData = new FormData();
+    formData.append('contact_id', contactId);
+    formData.append('lead_id', <?= $id ?>);
+
+    fetch('set_primary_contact_ajax.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === 'success') {
+            window.location.reload();
+        } else {
+            alert(data.message || 'Error setting primary contact');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Failed to connect to the server.');
+    });
+}
 
   function toggleSection(header) {
     const body = header.nextElementSibling;
@@ -1478,335 +1632,16 @@ include __DIR__ . '/../../includes/header.php';
     icon.classList.toggle('bi-chevron-down');
   }
 
-function showAddContactModal() {
-  document.getElementById('contactForm').reset();
-  document.getElementById('contact_id').value = '';
-  document.getElementById('contact_existing_cards').value = '';
-  document.getElementById('contact_form_mode').value = 'create';
-
-  document.getElementById('contactModalLabel').textContent = 'Add Contact';
-
-  // Clear any existing preview cards
-  const newPreviews = document.getElementById('visiting_cards_new_preview');
-  if (newPreviews) newPreviews.innerHTML = '';
-  const existingPreviews = document.getElementById('existing_cards_preview');
-  if (existingPreviews) existingPreviews.innerHTML = '';
-
-  new bootstrap.Modal(document.getElementById('contactModal')).show();
-}
-
-function addContact(isPrimary = false) {
-  const tpl = document.getElementById('contact-tpl');
-  const clone = tpl.content.cloneNode(true);
-  const row = clone.querySelector('tr');
-  const idx = contactCount;
-
-  row.dataset.contactIndex = idx;
-  row.querySelector('.contact-id-input').name = `contacts[${idx}][master_contact_id]`;
-  row.querySelector('.contact-contact-type-input').name = `contacts[${idx}][type]`;
-  row.querySelector('.contact-contact-type-input').value = 'Owner';
-  row.querySelector('.contact-existing-cards-input').name = `contacts[${idx}][existing_card]`;
-  row.querySelector('.contact-existing-cards-input').value = '[]';
-  row.querySelector('.contact-name-input').name = `contacts[${idx}][name]`;
-  row.querySelector('.contact-email-input').name = `contacts[${idx}][email]`;
-  row.querySelector('.contact-mobile-input').name = `contacts[${idx}][mobile]`;
-  row.querySelector('.contact-whatsapp-input').name = `contacts[${idx}][whatsapp]`;
-  row.querySelector('.contact-card-file-input').name = `contacts[${idx}][card_file][]`;
-  row.querySelector('.contact-card-file-input').setAttribute('onchange', `previewRowContactCard(this, ${idx})`);
-  row.querySelector('.contact-card-previews').id = `contact_card_previews_${idx}`;
-
-  const primaryCheck = row.querySelector('.primary-check');
-  primaryCheck.name = `contacts[${idx}][is_primary]`;
-  if (isPrimary || contactCount === 0) {
-    primaryCheck.checked = true;
-    row.classList.add('contact-primary-row');
-  }
-
-  document.getElementById('contacts-tbody').appendChild(clone);
-  contactCount++;
-  updateContactBadge();
-  updateMeetingWithDropdown();
-}
-
-// Global Contact Search inside Modal
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('contact_search');
-    const resultsContainer = document.getElementById('contact_search_results');
-
-    if (searchInput && resultsContainer) {
-        let debounceTimer;
-        searchInput.addEventListener('input', function() {
-            clearTimeout(debounceTimer);
-            const val = this.value.trim();
-            if (val.length < 2) {
-                resultsContainer.style.display = 'none';
-                return;
-            }
-
-            debounceTimer = setTimeout(() => {
-                fetch('../contacts/search_ajax.php?q=' + encodeURIComponent(val))
-                .then(r => r.json())
-                .then(data => {
-                    resultsContainer.innerHTML = '';
-                    if (data.results && data.results.length > 0) {
-                        data.results.forEach(item => {
-                            const a = document.createElement('a');
-                            a.href = '#';
-                            a.className = 'list-group-item list-group-item-action py-2';
-
-                            let subtitle = '';
-                            if(item.contact.organization_name) subtitle += item.contact.organization_name;
-                            if(item.contact.mobile) subtitle += (subtitle ? ' | ' : '') + item.contact.mobile;
-
-                            a.innerHTML = `<div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1">${item.contact.name}</h6>
-                                <small style="font-size: 10px;">${item.contact.contact_type || ''}</small>
-                            </div>
-                            <small class="text-muted" style="font-size: 10px;">${subtitle}</small>`;
-
-                            a.addEventListener('click', function(e) {
-                                e.preventDefault();
-                                document.getElementById('contact_id').value = item.id;
-                                document.getElementById('contact_name').value = item.contact.name || '';
-                                if(item.contact.contact_type) document.getElementById('contact_contact_type').value = item.contact.contact_type;
-                                document.getElementById('contact_mobile').value = item.contact.mobile || '';
-                                document.getElementById('contact_whatsapp').value = item.contact.whatsapp || '';
-                                document.getElementById('contact_email').value = item.contact.email || '';
-                                document.getElementById('contact_organization_name').value = item.contact.organization_name || '';
-                                document.getElementById('contact_website').value = item.contact.website || '';
-                                document.getElementById('contact_address').value = item.contact.address || '';
-                                document.getElementById('contact_city').value = item.contact.city || '';
-                                document.getElementById('contact_state').value = item.contact.state || '';
-                                document.getElementById('contact_pincode').value = item.contact.pincode || '';
-
-                                resultsContainer.style.display = 'none';
-                                searchInput.value = '';
-
-                                // Show success feedback
-                                searchInput.placeholder = `Populated: ${item.contact.name}`;
-                                setTimeout(() => searchInput.placeholder = "Type name, mobile, email or organization to search...", 3000);
-                            });
-                            resultsContainer.appendChild(a);
-                        });
-                        resultsContainer.style.display = 'block';
-                    } else {
-                        resultsContainer.innerHTML = '<div class="list-group-item text-muted small py-2">No master contact found. Continue typing to add as new.</div>';
-                        resultsContainer.style.display = 'block';
-                        document.getElementById('contact_id').value = '';
-                    }
-                });
-            }, 300);
-        });
-
-        document.addEventListener('click', function(e) {
-            if (e.target !== searchInput && e.target !== resultsContainer && !resultsContainer.contains(e.target)) {
-                resultsContainer.style.display = 'none';
-            }
-        });
-    }
-});
-
-// Handle Modal Submission for Create/Edit Pages (No AJAX)
-document.getElementById('contactForm').addEventListener('submit', function(e) {
-  e.preventDefault();
-
-  const tpl = document.getElementById('contact-tpl');
-  const clone = tpl.content.cloneNode(true);
-  const row = clone.querySelector('tr');
-  const idx = contactCount;
-
-  row.dataset.contactIndex = idx;
-
-  // Is this the first contact? Make it primary
-  const isPrimary = (contactCount === 0);
-  if (isPrimary) {
-    row.querySelector('.primary-check').checked = true;
-    row.classList.add('contact-primary-row');
-  }
-
-  // Gather values
-  const cId = document.getElementById('contact_id').value;
-  const cName = document.getElementById('contact_name').value;
-  const cType = document.getElementById('contact_contact_type').value;
-  const cMobile = document.getElementById('contact_mobile').value;
-  const cWa = document.getElementById('contact_whatsapp').value;
-  const cEmail = document.getElementById('contact_email').value;
-  const cOrg = document.getElementById('contact_organization_name').value;
-  const cWeb = document.getElementById('contact_website').value;
-  const cAddr = document.getElementById('contact_address').value;
-  const cCity = document.getElementById('contact_city').value;
-  const cState = document.getElementById('contact_state').value;
-  const cPin = document.getElementById('contact_pincode').value;
-  const cCards = document.getElementById('contact_existing_cards').value;
-
-  // Set display text
-  const nameDisplay = row.querySelector('.contact-name-display');
-  if (nameDisplay) nameDisplay.textContent = cName;
-  const typeDisplay = row.querySelector('.contact-contact-type-display');
-  if (typeDisplay) typeDisplay.textContent = cType;
-  const mobileDisplay = row.querySelector('.contact-mobile-display');
-  if (mobileDisplay) mobileDisplay.textContent = cMobile;
-  const whatsappDisplay = row.querySelector('.contact-whatsapp-display');
-  if (whatsappDisplay) whatsappDisplay.textContent = cWa ? `WA: ${cWa}` : '';
-  const emailDisplay = row.querySelector('.contact-email-display');
-  if (emailDisplay) emailDisplay.textContent = cEmail || '-';
-
-  // Set hidden inputs
-  row.querySelector('.contact-id-input').name = `contacts[${idx}][master_contact_id]`;
-  row.querySelector('.contact-id-input').value = cId;
-
-  row.querySelector('.contact-name-input').name = `contacts[${idx}][name]`;
-  row.querySelector('.contact-name-input').value = cName;
-
-  row.querySelector('.contact-contact-type-input').name = `contacts[${idx}][type]`;
-  row.querySelector('.contact-contact-type-input').value = cType;
-
-  row.querySelector('.contact-mobile-input').name = `contacts[${idx}][mobile]`;
-  row.querySelector('.contact-mobile-input').value = cMobile;
-
-  row.querySelector('.contact-whatsapp-input').name = `contacts[${idx}][whatsapp]`;
-  row.querySelector('.contact-whatsapp-input').value = cWa;
-
-  row.querySelector('.contact-email-input').name = `contacts[${idx}][email]`;
-  row.querySelector('.contact-email-input').value = cEmail;
-
-  row.querySelector('.contact-organization-name-input').name = `contacts[${idx}][organization_name]`;
-  row.querySelector('.contact-organization-name-input').value = cOrg;
-
-  row.querySelector('.contact-website-input').name = `contacts[${idx}][website]`;
-  row.querySelector('.contact-website-input').value = cWeb;
-
-  row.querySelector('.contact-address-input').name = `contacts[${idx}][address]`;
-  row.querySelector('.contact-address-input').value = cAddr;
-
-  row.querySelector('.contact-city-input').name = `contacts[${idx}][city]`;
-  row.querySelector('.contact-city-input').value = cCity;
-
-  row.querySelector('.contact-state-input').name = `contacts[${idx}][state]`;
-  row.querySelector('.contact-state-input').value = cState;
-
-  row.querySelector('.contact-pincode-input').name = `contacts[${idx}][pincode]`;
-  row.querySelector('.contact-pincode-input').value = cPin;
-
-  row.querySelector('.contact-existing-cards-input').name = `contacts[${idx}][existing_card]`;
-  row.querySelector('.contact-existing-cards-input').value = cCards;
-
-  row.querySelector('.primary-check').name = `contacts[${idx}][is_primary]`;
-
-  // Handle files transfer
-  const fileInputDevice = document.getElementById('contact_visiting_card_device');
-  const fileInputCamera = document.getElementById('contact_visiting_card_camera');
-
-  const filesContainer = row.querySelector('.contact-file-inputs-container');
-  let totalCards = 0;
-
-  if (cCards) {
-      try {
-          const arr = JSON.parse(cCards);
-          if (Array.isArray(arr)) totalCards += arr.length;
-          else if (typeof cCards === 'string' && cCards.length > 5) totalCards += 1;
-      } catch(e) {}
-  }
-
-  const dt = new DataTransfer();
-  if (fileInputDevice.files.length > 0) {
-      Array.from(fileInputDevice.files).forEach(f => dt.items.add(f));
-  }
-  if (fileInputCamera.files.length > 0) {
-      Array.from(fileInputCamera.files).forEach(f => dt.items.add(f));
-  }
-
-  if (dt.files.length > 0) {
-      const newFileInput = document.createElement('input');
-      newFileInput.type = 'file';
-      newFileInput.name = `contacts[${idx}][card_file][]`;
-      newFileInput.multiple = true;
-      newFileInput.files = dt.files;
-      filesContainer.appendChild(newFileInput);
-      totalCards += dt.files.length;
-  }
-
-  const cardsCount = row.querySelector('.contact-cards-count');
-  if (cardsCount) cardsCount.textContent = totalCards + ' Cards';
-
-  document.getElementById('contacts-tbody').appendChild(row);
-
-  contactCount++;
-  updateContactBadge();
-  updateMeetingWithDropdown();
-
-  // Close Modal
-  const modalEl = document.getElementById('contactModal');
-  const modal = bootstrap.Modal.getInstance(modalEl);
-  if (modal) modal.hide();
-});
-
-  function removeContact(btn) {
-    btn.closest('tr').remove();
-    updateContactBadge();
-    updateMeetingWithDropdown();
-  }
-
-  function previewRowContactCard(input, idx) {
-    const container = document.getElementById(`contact_card_previews_${idx}`);
-    if (!container) return;
-
-    container.querySelectorAll('.new-card-preview').forEach(el => el.remove());
-
-    const imgExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
-    Array.from(input.files).forEach(f => {
-      const ext = f.name.split('.').pop().toLowerCase();
-      if (!imgExts.includes(ext)) return;
-
-      const reader = new FileReader();
-      reader.onload = e => {
-        const div = document.createElement('div');
-        div.className = 'saved-doc-thumb new-card-preview position-relative';
-        div.style.cssText = 'width: 45px; height: 32px; border-radius: 4px; overflow: hidden;';
-        div.innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;">`;
-        container.appendChild(div);
-      };
-      reader.readAsDataURL(f);
-    });
-  }
-
-  function removeSavedRowCard(contactIdx, cardIdx, cardPath) {
-    const row = document.querySelector(`tr[data-contact-index="${contactIdx}"]`);
-    if (!row) return;
-
-    const existingInput = row.querySelector('.contact-existing-cards-input');
-    if (!existingInput) return;
-
-    try {
-      let cards = JSON.parse(existingInput.value) || [];
-      if (!Array.isArray(cards)) {
-        cards = cards ? [cards] : [];
-      }
-      cards = cards.filter(c => c !== cardPath);
-      existingInput.value = JSON.stringify(cards);
-    } catch (e) {
-      existingInput.value = '[]';
-    }
-
-    const thumbEl = document.getElementById(`saved_card_${contactIdx}_${cardIdx}`);
-    if (thumbEl) thumbEl.remove();
-  }
-
-  function updateContactBadge() {
-    const n = document.querySelectorAll('#contacts-tbody .contact-row').length;
-    document.getElementById('contact-count-badge').textContent = n + ' Contact' + (n !== 1 ? 's' : '');
-  }
-
   function updateMeetingWithDropdown() {
     const sel = document.getElementById('meeting-with-contact');
     if (!sel) return;
-    const names = Array.from(document.querySelectorAll('.contact-name-input')).map(i => i.value).filter(Boolean);
+    const names = leadContacts.map(c => c.name).filter(Boolean);
     sel.innerHTML = '<option value="">Select Contact Person</option>' +
       names.map(n => `<option value="${n}">${n}</option>`).join('');
   }
 
-  // Doc preview
-  function previewDocs(input, containerId = 'doc-previews') {
+  function previewDocs(input, containerId) {
+    containerId = containerId || 'doc-previews';
     const container = document.getElementById(containerId);
     const imgExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
     Array.from(input.files).forEach(f => {
@@ -1828,6 +1663,105 @@ document.getElementById('contactForm').addEventListener('submit', function(e) {
       container.appendChild(div);
     });
   }
+
+  function previewCardFiles(input) {
+    const container = document.getElementById('visiting_cards_new_preview');
+    Array.from(input.files).forEach(f => {
+      const div = document.createElement('div');
+      div.className = 'position-relative d-inline-block border rounded p-1';
+      div.style.width = '70px';
+      const r = new FileReader();
+      r.onload = e => {
+        div.innerHTML = `
+          <img src="${e.target.result}" style="width: 100%; height: 45px; object-fit: cover;" class="rounded">
+          <span class="badge bg-success position-absolute top-0 start-0 p-1" style="font-size: 8px; border-radius: 50%;"><i class="bi bi-check"></i></span>
+        `;
+      };
+      r.readAsDataURL(f);
+      container.appendChild(div);
+    });
+  }
+
+  // Contact Autocomplete Logic
+  document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('contact_search');
+    const resultsContainer = document.getElementById('contact_search_results');
+    
+    if (searchInput && resultsContainer) {
+      let debounceTimer;
+      searchInput.addEventListener('input', function() {
+        clearTimeout(debounceTimer);
+        const val = this.value.trim();
+        if (val.length < 2) {
+          resultsContainer.style.display = 'none';
+          return;
+        }
+        
+        debounceTimer = setTimeout(() => {
+          fetch('<?= BASE_URL ?>/modules/contacts/search_ajax.php?q=' + encodeURIComponent(val))
+          .then(r => r.json())
+          .then(data => {
+            resultsContainer.innerHTML = '';
+            if (data.results && data.results.length > 0) {
+              data.results.forEach(item => {
+                const a = document.createElement('a');
+                a.href = '#';
+                a.className = 'list-group-item list-group-item-action py-2';
+                
+                let subtitle = '';
+                if(item.contact.organization_name) subtitle += item.contact.organization_name;
+                if(item.contact.mobile) subtitle += (subtitle ? ' | ' : '') + item.contact.mobile;
+                
+                a.innerHTML = `<div class="d-flex w-100 justify-content-between">
+                  <h6 class="mb-1">${item.contact.name}</h6>
+                  <small>${item.contact.contact_type || ''}</small>
+                </div>
+                <small class="text-muted">${subtitle}</small>`;
+                
+                a.addEventListener('click', function(e) {
+                  e.preventDefault();
+                  document.getElementById('contact_id').value = item.id;
+                  document.getElementById('contact_form_mode').value = 'link_existing';
+                  
+                  document.getElementById('contact_name').value = item.contact.name || '';
+                  if(item.contact.contact_type) document.getElementById('contact_contact_type').value = item.contact.contact_type;
+                  document.getElementById('contact_mobile').value = item.contact.mobile || '';
+                  document.getElementById('contact_whatsapp').value = item.contact.whatsapp || '';
+                  document.getElementById('contact_email').value = item.contact.email || '';
+                  document.getElementById('contact_organization_name').value = item.contact.organization_name || '';
+                  document.getElementById('contact_website').value = item.contact.website || '';
+                  document.getElementById('contact_address').value = item.contact.address || '';
+                  document.getElementById('contact_city').value = item.contact.city || '';
+                  document.getElementById('contact_state').value = item.contact.state || '';
+                  document.getElementById('contact_pincode').value = item.contact.pincode || '';
+                  
+                  // Disable fields for read-only view
+                  const fieldsToDisable = ['contact_name', 'contact_contact_type', 'contact_mobile', 'contact_whatsapp', 'contact_email', 'contact_organization_name', 'contact_website', 'contact_address', 'contact_city', 'contact_state', 'contact_pincode'];
+                  fieldsToDisable.forEach(fid => {
+                    if(document.getElementById(fid)) document.getElementById(fid).disabled = true;
+                  });
+                  
+                  resultsContainer.style.display = 'none';
+                  searchInput.value = '';
+                });
+                resultsContainer.appendChild(a);
+              });
+              resultsContainer.style.display = 'block';
+            } else {
+              resultsContainer.innerHTML = '<div class="list-group-item text-muted">No contacts found. Type below to create a new one.</div>';
+              resultsContainer.style.display = 'block';
+            }
+          });
+        }, 300);
+      });
+      
+      document.addEventListener('click', function(e) {
+        if (e.target !== searchInput && e.target !== resultsContainer && !resultsContainer.contains(e.target)) {
+          resultsContainer.style.display = 'none';
+        }
+      });
+    }
+  });
 
   // Drag & drop
   const dropZone = document.getElementById('doc-drop-zone');

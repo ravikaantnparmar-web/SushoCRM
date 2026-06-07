@@ -100,95 +100,10 @@ try {
 
     db()->prepare($sql)->execute($params);
 
-    // ── 2. Refresh Contacts ───────────────────────────────────
-    db()->prepare("DELETE FROM contact_relations WHERE entity_type = 'lead' AND entity_id = ?")->execute([$id]);
-    if (!empty($_POST['contacts'])) {
-        $stmtContact = db()->prepare("INSERT INTO contacts (contact_type, name, mobile, whatsapp, email, visiting_card, organization_name, address, city, state, pincode, website) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
-        $stmtContactUpdate = db()->prepare("UPDATE contacts SET contact_type = ?, name = ?, mobile = ?, whatsapp = ?, email = ?, visiting_card = ?, organization_name = ?, address = ?, city = ?, state = ?, pincode = ?, website = ? WHERE id = ?");
-        $stmtRelation = db()->prepare("INSERT IGNORE INTO contact_relations (contact_id, entity_type, entity_id, role, is_primary) VALUES (?, 'lead', ?, ?, ?)");
+    // ── 2. Refresh Contacts (REMOVED) ─────────────────────────
+    // Contacts are now managed exclusively via AJAX in both view.php and edit.php
+    // to allow full master-contact sync and extended fields.
 
-        foreach ($_POST['contacts'] as $idx => $c) {
-            if (empty($c['name'])) continue;
-            // Preserve existing cards + add new ones
-            $cardPaths = !empty($c['existing_card'])
-                ? (json_decode($c['existing_card'], true) ?: [$c['existing_card']])
-                : [];
-            if (!empty($_FILES['contacts']['name'][$idx]['card_file'][0])) {
-                $files = $_FILES['contacts'];
-                foreach ($files['name'][$idx]['card_file'] as $fIdx => $fName) {
-                    if ($files['error'][$idx]['card_file'][$fIdx] == UPLOAD_ERR_OK) {
-                        $fd = [
-                            'name' => $fName, 'type' => $files['type'][$idx]['card_file'][$fIdx],
-                            'tmp_name' => $files['tmp_name'][$idx]['card_file'][$fIdx],
-                            'error' => $files['error'][$idx]['card_file'][$fIdx],
-                            'size' => $files['size'][$idx]['card_file'][$fIdx],
-                        ];
-                        $path = uploadFile($fd, 'leads/cards');
-                        if ($path) $cardPaths[] = $path;
-                    }
-                }
-            }
-
-            // Try to find existing contact
-            $existing = false;
-
-            if (!empty($c['master_contact_id'])) {
-                $existing = (int)$c['master_contact_id'];
-            } else {
-                if (!empty($c['mobile'])) {
-                    $check = db()->prepare("SELECT id FROM contacts WHERE mobile = ? LIMIT 1");
-                    $check->execute([$c['mobile']]);
-                    $existing = $check->fetchColumn();
-                }
-                if (!$existing && !empty($c['email'])) {
-                    $check = db()->prepare("SELECT id FROM contacts WHERE email = ? LIMIT 1");
-                    $check->execute([$c['email']]);
-                    $existing = $check->fetchColumn();
-                }
-                if (!$existing) {
-                    $check = db()->prepare("SELECT id FROM contacts WHERE name = ? LIMIT 1");
-                    $check->execute([$c['name']]);
-                    $existing = $check->fetchColumn();
-                }
-            }
-
-            if ($existing) {
-                $contactId = $existing;
-                $stmtContactUpdate->execute([
-                    $c['type'] ?? 'Owner',
-                    $c['name'],
-                    $c['mobile'] ?: null,
-                    $c['whatsapp'] ?: null,
-                    $c['email'] ?: null,
-                    !empty($cardPaths) ? json_encode($cardPaths) : null,
-                    $c['organization_name'] ?? null,
-                    $c['address'] ?? null,
-                    $c['city'] ?? null,
-                    $c['state'] ?? null,
-                    $c['pincode'] ?? null,
-                    $c['website'] ?? null,
-                    $contactId
-                ]);
-            } else {
-                $stmtContact->execute([
-                    $c['type'] ?? 'Owner', $c['name'],
-                    $c['mobile'] ?: null, $c['whatsapp'] ?: null, $c['email'] ?: null,
-                    !empty($cardPaths) ? json_encode($cardPaths) : null,
-                    $c['organization_name'] ?? null, $c['address'] ?? null,
-                    $c['city'] ?? null, $c['state'] ?? null, $c['pincode'] ?? null,
-                    $c['website'] ?? null
-                ]);
-                $contactId = db()->lastInsertId();
-            }
-
-            $stmtRelation->execute([
-                $contactId,
-                $id,
-                $c['type'] ?? 'Owner',
-                !empty($c['is_primary']) ? 1 : 0
-            ]);
-        }
-    }
 
     // ── 2b. Refresh Addresses ───────────────────────────────────
     db()->prepare("DELETE FROM lead_addresses WHERE lead_id = ?")->execute([$id]);

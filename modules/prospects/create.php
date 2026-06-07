@@ -24,7 +24,7 @@ include __DIR__ . '/../../includes/header.php';
 
 <style>
 /* ============================================================
-   NEW LEAD FORM — Two-Column Layout (matches edit.php)
+   NEW LEAD FORM Ã¢â‚¬â€ Two-Column Layout (matches edit.php)
    ============================================================ */
 :root {
   --lp: #5b6ef5;
@@ -252,7 +252,7 @@ include __DIR__ . '/../../includes/header.php';
          ==================================================== -->
     <div class="lead-left-col">
 
-      <!-- ─── SECTION 1: LEAD MASTER INFO ─── -->
+      <!-- Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ SECTION 1: LEAD MASTER INFO Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ -->
       <div class="ls-card">
         <div class="ls-card-header" onclick="toggleSection(this)">
           <div class="sec-ico ico-indigo"><i class="bi bi-star-fill"></i></div>
@@ -344,7 +344,7 @@ include __DIR__ . '/../../includes/header.php';
         </div>
       </div><!-- /lead master -->
 
-      <!-- ─── SECTION 2: COMPANY INFORMATION ─── -->
+      <!-- Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ SECTION 2: COMPANY INFORMATION Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ -->
       <div class="ls-card">
         <div class="ls-card-header" onclick="toggleSection(this)">
           <div class="sec-ico ico-green"><i class="bi bi-building"></i></div>
@@ -420,7 +420,7 @@ include __DIR__ . '/../../includes/header.php';
         </div>
       </div><!-- /company -->
 
-      <!-- ─── SECTION 3: ADDRESS INFORMATION ─── -->
+      <!-- Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ SECTION 3: ADDRESS INFORMATION Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ -->
       <div class="ls-card">
         <div class="ls-card-header" onclick="toggleSection(this)">
           <div class="sec-ico ico-orange"><i class="bi bi-geo-alt-fill"></i></div>
@@ -439,7 +439,7 @@ include __DIR__ . '/../../includes/header.php';
         <div class="ls-card-body" style="padding: 10px; background: #f9fafb;" id="addresses-container">
           <!-- Addresses inserted by JS -->
         </div>
-      </div><!-- /address -->      <!-- ─── SECTION 4: CONTACT PERSONS ─── -->
+      </div><!-- /address -->      <!-- Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ SECTION 4: CONTACT PERSONS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ -->
       <div class="ls-card">
         <div class="ls-card-header" onclick="toggleSection(this)">
           <div class="sec-ico ico-purple"><i class="bi bi-people-fill"></i></div>
@@ -448,9 +448,9 @@ include __DIR__ . '/../../includes/header.php';
             1 Contact
           </span>
           <div class="ms-auto d-flex gap-2" onclick="event.stopPropagation()">
-            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addContact()"
+            <button type="button" class="btn btn-sm btn-outline-primary" onclick="showAddContactModal()"
                     style="font-size:12px;">
-              <i class="bi bi-plus-lg me-1"></i>Add Blank Contact
+              <i class="bi bi-plus-lg me-1"></i>Add Contact
             </button>
             <button type="button" class="btn btn-sm btn-success"
                     onclick="document.getElementById('submit-btn').click()" style="font-size:12px;">
@@ -460,21 +460,15 @@ include __DIR__ . '/../../includes/header.php';
           <i class="bi bi-chevron-up ls-toggle ms-2"></i>
         </div>
         <div class="ls-card-body" style="padding:0;">
-          <div class="contact-table-wrap">
-            <table class="contact-table">
+          <div class="contact-table-wrap table-responsive">
+            <table class="table table-hover table-contacts mb-0">
               <thead>
                 <tr>
-                  <th>Name <span class="text-danger">*</span></th>
-                  <th>
-                    Designation
-                    <span class="f2-badge"><i class="bi bi-keyboard"></i> F2 to Add</span>
-                  </th>
-                  <th>Email</th>
-                  <th>Mobile <span class="text-danger">*</span></th>
-                  <th>WhatsApp</th>
-                  <th class="text-center">Visiting Card</th>
-                  <th>Primary</th>
-                  <th></th>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Contact Details</th>
+                  <th>Visiting Card</th>
+                  <th style="width: 100px;">Actions</th>
                 </tr>
               </thead>
               <tbody id="contacts-tbody">
@@ -485,7 +479,7 @@ include __DIR__ . '/../../includes/header.php';
         </div>
       </div><!-- /contacts -->
 
-      <!-- ─── SECTION 5: LEAD MEET ─── -->
+      <!-- Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ SECTION 5: LEAD MEET Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ -->
       <div class="ls-card">
         <div class="ls-card-header" onclick="toggleSection(this)">
           <div class="sec-ico ico-amber"><i class="bi bi-calendar-check-fill"></i></div>
@@ -556,7 +550,7 @@ include __DIR__ . '/../../includes/header.php';
          ==================================================== -->
     <div class="lead-right-col">
 
-      <!-- ── PANEL: PRODUCT / REQUIREMENT ── -->
+      <!-- Ã¢â€â‚¬Ã¢â€â‚¬ PANEL: PRODUCT / REQUIREMENT Ã¢â€â‚¬Ã¢â€â‚¬ -->
       <div class="ls-right-panel">
         <div class="ls-right-panel-header">
           <i class="bi bi-box-seam-fill"></i>
@@ -593,9 +587,9 @@ include __DIR__ . '/../../includes/header.php';
           </div>
 
           <div class="mb-3">
-            <label class="form-label">Estimated Budget (₹)</label>
+            <label class="form-label">Estimated Budget (Ã¢â€šÂ¹)</label>
             <div class="input-group input-group-sm">
-              <span class="input-group-text text-muted">₹</span>
+              <span class="input-group-text text-muted">Ã¢â€šÂ¹</span>
               <input type="number" name="estimated_budget" class="form-control"
                      placeholder="0" min="0" step="1000">
             </div>
@@ -623,7 +617,7 @@ include __DIR__ . '/../../includes/header.php';
 
 
 
-      <!-- ── PANEL: SITE MEDIA & DOCUMENTS ── -->
+      <!-- Ã¢â€â‚¬Ã¢â€â‚¬ PANEL: SITE MEDIA & DOCUMENTS Ã¢â€â‚¬Ã¢â€â‚¬ -->
       <div class="ls-right-panel">
         <div class="ls-right-panel-header">
           <i class="bi bi-folder2-open"></i>
@@ -696,6 +690,8 @@ include __DIR__ . '/../../includes/header.php';
 <template id="contact-tpl">
   <tr class="contact-row" data-contact-index="">
     <td>
+      <div class="fw-bold contact-name-display"></div>
+      <span class="badge bg-primary contact-primary-badge mt-1" style="font-size:9px; display:none;">PRIMARY</span>
       <input type="hidden" name="" class="contact-id-input">
       <input type="hidden" name="" class="contact-organization-name-input">
       <input type="hidden" name="" class="contact-website-input">
@@ -704,40 +700,43 @@ include __DIR__ . '/../../includes/header.php';
       <input type="hidden" name="" class="contact-state-input">
       <input type="hidden" name="" class="contact-pincode-input">
       <input type="hidden" name="" class="contact-existing-cards-input">
-      <input type="text" name="" class="form-control contact-name-input" placeholder="Full name">
-      <div class="contact-search-results list-group position-absolute shadow-sm" style="display:none; z-index:1000; min-width:240px;"></div>
+      <input type="hidden" name="" class="contact-name-input">
+      <input type="hidden" name="" class="contact-contact-type-input">
+      <input type="hidden" name="" class="contact-email-input">
+      <input type="hidden" name="" class="contact-mobile-input">
+      <input type="hidden" name="" class="contact-whatsapp-input">
+      <input type="checkbox" name="" class="primary-check d-none">
       <div class="contact-file-inputs-container d-none"></div>
     </td>
     <td>
-      <select name="" class="form-select contact-contact-type-input designation-select">
-        <option value="Owner">Owner</option>
-        <option value="Primary">Primary</option>
-        <option value="Site Engineer">Site Engineer</option>
-        <option value="Architect">Architect / PMC</option>
-        <option value="Manager">Manager</option>
-        <option value="Contractor">Contractor</option>
-        <option value="Purchase Head">Purchase Head</option>
-        <option value="Other">Other</option>
-      </select>
+      <span class="badge bg-light text-dark border contact-contact-type-display"></span>
     </td>
-    <td><input type="email" name="" class="form-control contact-email-input" placeholder="email@domain.com"></td>
-    <td><input type="tel" name="" class="form-control contact-mobile-input" placeholder="Mobile"></td>
-    <td><input type="tel" name="" class="form-control contact-whatsapp-input" placeholder="WhatsApp"></td>
-    <td class="text-center">
-      <div class="d-flex align-items-center justify-content-center gap-2">
-        <label class="btn btn-sm btn-outline-primary p-1 px-2 mb-0" style="cursor:pointer;" title="Upload Visiting Card">
-          <i class="bi bi-card-image"></i>
-          <input type="file" name="" class="d-none contact-card-file-input" multiple accept="image/*">
-        </label>
-        <div class="contact-card-previews d-flex gap-1"></div>
-      </div>
-      </td>
-    <td class="text-center"><input class="form-check-input primary-check" type="checkbox" name="" value="1"></td>
     <td>
-      <button type="button" class="btn btn-sm btn-outline-danger remove-btn"
-              onclick="removeContact(this)" style="font-size:11px;padding:3px 8px;">
-        <i class="bi bi-trash"></i>
-      </button>
+      <div class="small contact-mobile-container d-none"><i class="bi bi-telephone text-muted me-1"></i><a href="#" class="contact-mobile-display"></a></div>
+      <div class="small contact-whatsapp-container d-none"><i class="bi bi-whatsapp text-success me-1"></i><a href="#" target="_blank" class="text-success contact-whatsapp-display"></a></div>
+      <div class="small contact-email-container d-none"><i class="bi bi-envelope text-muted me-1"></i><a href="#" class="contact-email-display"></a></div>
+
+      <div class="mt-2 pt-2 border-top border-light contact-org-section d-none">
+        <div class="small text-muted contact-org-name-container d-none"><i class="bi bi-building me-1"></i><strong class="contact-organization-name-display"></strong></div>
+        <div class="small text-muted contact-address-display-container d-none" style="font-size:11px;">
+          <i class="bi bi-geo-alt me-1"></i>
+          <span class="contact-address-display"></span>
+        </div>
+        <div class="small contact-website-container d-none"><i class="bi bi-globe text-muted me-1"></i><a href="#" target="_blank" class="text-decoration-none contact-website-display" style="font-size:11px;">Website</a></div>
+      </div>
+    </td>
+    <td>
+      <div class="d-flex gap-1 flex-wrap contact-card-previews"></div>
+      <div class="contact-cards-count small text-muted mt-1"></div>
+    </td>
+    <td>
+      <div class="d-flex flex-column gap-1">
+        <div class="d-flex gap-1">
+          <button type="button" class="btn btn-outline-primary btn-sm px-2 py-1 edit-btn" onclick="editLocalContact(this)" title="Edit"><i class="bi bi-pencil"></i></button>
+          <button type="button" class="btn btn-outline-danger btn-sm px-2 py-1 remove-btn" onclick="removeContact(this)" title="Delete"><i class="bi bi-trash"></i></button>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-secondary px-2 py-1 set-primary-btn" onclick="setPrimaryContactNew(this)" style="font-size: 10px;">Set as Primary</button>
+      </div>
     </td>
   </tr>
 </template>
@@ -840,45 +839,7 @@ function toggleSection(header) {
   icon.classList.toggle('bi-chevron-down');
 }
 
-function addContact(isPrimary = false) {
-  const tpl = document.getElementById('contact-tpl');
-  const clone = tpl.content.cloneNode(true);
-  const row = clone.querySelector('tr');
-  const idx = contactCount;
-
-  row.dataset.contactIndex = idx;
-  if (isPrimary) row.classList.add('contact-primary-row');
-
-  // Set input names based on indices
-  row.querySelector('.contact-id-input').name = `contacts[${idx}][master_contact_id]`;
-  row.querySelector('.contact-name-input').name = `contacts[${idx}][name]`;
-  row.querySelector('.contact-contact-type-input').name = `contacts[${idx}][type]`;
-  row.querySelector('.contact-email-input').name = `contacts[${idx}][email]`;
-  row.querySelector('.contact-mobile-input').name = `contacts[${idx}][mobile]`;
-  row.querySelector('.contact-whatsapp-input').name = `contacts[${idx}][whatsapp]`;
-  row.querySelector('.contact-card-file-input').name = `contacts[${idx}][card_file][]`;
-  row.querySelector('.contact-card-file-input').setAttribute('onchange', `previewRowContactCard(this, ${idx})`);
-  row.querySelector('.contact-card-previews').id = `contact_card_previews_${idx}`;
-
-  const primaryCheck = row.querySelector('.primary-check');
-  primaryCheck.name = `contacts[${idx}][is_primary]`;
-
-  if (isPrimary) {
-    primaryCheck.checked = true;
-  } else {
-    row.querySelector('.remove-btn').style.display = 'inline-flex';
-  }
-
-  document.getElementById('contacts-tbody').appendChild(clone);
-
-  // Attach inline search logic
-  const rowElement = document.getElementById('contacts-tbody').lastElementChild;
-  initRowContactSearch(rowElement);
-
-  contactCount++;
-  updateContactBadge();
-  updateMeetingWithDropdown();
-}
+// addContact() is no longer used directly — contacts are added via the modal (showAddContactModal)
 
 function initRowContactSearch(row) {
     const searchInput = row.querySelector('.contact-name-input');
@@ -1031,6 +992,7 @@ if (dropZone) {
   });
 }
 
+
 document.getElementById('lead-create-form').addEventListener('submit', function() {
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
@@ -1046,9 +1008,6 @@ function clearGoogleLocation() {
   document.getElementById('google-address-preview').classList.add('d-none');
 }
 
-// Init: add first primary contact on page load
-addContact(true);
-
 let addressCount = 0;
 function addAddress(isPrimary = false) {
   const tpl = document.getElementById('address-tpl');
@@ -1058,20 +1017,20 @@ function addAddress(isPrimary = false) {
 
   card.dataset.addressIndex = idx;
 
-  card.querySelector('.address-type-input').name = `addresses[${idx}][address_type]`;
-  card.querySelector('.primary-address-check').name = `addresses[${idx}][is_primary]`;
-  card.querySelector('.addr-line1').name = `addresses[${idx}][address_line1]`;
-  card.querySelector('.addr-line2').name = `addresses[${idx}][address_line2]`;
-  card.querySelector('.addr-area').name = `addresses[${idx}][area]`;
-  card.querySelector('.addr-city').name = `addresses[${idx}][city]`;
-  card.querySelector('.addr-state').name = `addresses[${idx}][state]`;
-  card.querySelector('.addr-pincode').name = `addresses[${idx}][pincode]`;
+  card.querySelector('.address-type-input').name = 'addresses[' + idx + '][address_type]';
+  card.querySelector('.primary-address-check').name = 'addresses[' + idx + '][is_primary]';
+  card.querySelector('.addr-line1').name = 'addresses[' + idx + '][address_line1]';
+  card.querySelector('.addr-line2').name = 'addresses[' + idx + '][address_line2]';
+  card.querySelector('.addr-area').name = 'addresses[' + idx + '][area]';
+  card.querySelector('.addr-city').name = 'addresses[' + idx + '][city]';
+  card.querySelector('.addr-state').name = 'addresses[' + idx + '][state]';
+  card.querySelector('.addr-pincode').name = 'addresses[' + idx + '][pincode]';
 
-  card.querySelector('.addr-gaddress').name = `addresses[${idx}][google_address]`;
-  card.querySelector('.addr-glink').name = `addresses[${idx}][google_maps_link]`;
-  card.querySelector('.addr-lat').name = `addresses[${idx}][lat]`;
-  card.querySelector('.addr-lng').name = `addresses[${idx}][lng]`;
-  card.querySelector('.addr-gcode').name = `addresses[${idx}][google_location]`;
+  card.querySelector('.addr-gaddress').name = 'addresses[' + idx + '][google_address]';
+  card.querySelector('.addr-glink').name = 'addresses[' + idx + '][google_maps_link]';
+  card.querySelector('.addr-lat').name = 'addresses[' + idx + '][lat]';
+  card.querySelector('.addr-lng').name = 'addresses[' + idx + '][lng]';
+  card.querySelector('.addr-gcode').name = 'addresses[' + idx + '][google_location]';
 
   if (isPrimary) {
     card.querySelector('.primary-address-check').checked = true;
@@ -1249,7 +1208,36 @@ addAddress(true);
 // Init: add first primary contact on page load - Removed since we use Modal now
 // addContact(true);
 
+
+function editLocalContact(btn) {
+  const row = btn.closest('tr');
+  const idx = row.dataset.contactIndex;
+  
+  document.getElementById('contactForm').reset();
+  document.getElementById('contact_form_mode').value = 'edit_local';
+  document.getElementById('contact_form_mode').dataset.editIndex = idx;
+  
+  document.getElementById('contactModalLabel').textContent = 'Edit Contact';
+  
+  document.getElementById('contact_id').value = row.querySelector('.contact-id-input').value;
+  document.getElementById('contact_name').value = row.querySelector('.contact-name-input').value;
+  document.getElementById('contact_contact_type').value = row.querySelector('.contact-contact-type-input').value;
+  document.getElementById('contact_email').value = row.querySelector('.contact-email-input').value;
+  document.getElementById('contact_mobile').value = row.querySelector('.contact-mobile-input').value;
+  document.getElementById('contact_whatsapp').value = row.querySelector('.contact-whatsapp-input').value;
+  document.getElementById('contact_organization_name').value = row.querySelector('.contact-organization-name-input').value;
+  document.getElementById('contact_website').value = row.querySelector('.contact-website-input').value;
+  document.getElementById('contact_address').value = row.querySelector('.contact-address-input').value;
+  document.getElementById('contact_city').value = row.querySelector('.contact-city-input').value;
+  document.getElementById('contact_state').value = row.querySelector('.contact-state-input').value;
+  document.getElementById('contact_pincode').value = row.querySelector('.contact-pincode-input').value;
+  document.getElementById('contact_existing_cards').value = row.querySelector('.contact-existing-cards-input').value;
+  
+  new bootstrap.Modal(document.getElementById('contactModal')).show();
+}
+
 function showAddContactModal() {
+  document.getElementById('contact_form_mode').dataset.editIndex = '';
   document.getElementById('contactForm').reset();
   document.getElementById('contact_id').value = '';
   document.getElementById('contact_existing_cards').value = '';
@@ -1344,141 +1332,229 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Handle Modal Submission for Create/Edit Pages (No AJAX)
+// Handle Modal Submission for Create Page (No AJAX — stores data locally in row)
 document.getElementById('contactForm').addEventListener('submit', function(e) {
   e.preventDefault();
 
-  const tpl = document.getElementById('contact-tpl');
-  const clone = tpl.content.cloneNode(true);
-  const row = clone.querySelector('tr');
-  const idx = contactCount;
+  const formMode = document.getElementById('contact_form_mode').value;
+  const isEdit = (formMode === 'edit_local');
+  let row, idx;
 
-  row.dataset.contactIndex = idx;
+  if (isEdit) {
+    idx = document.getElementById('contact_form_mode').dataset.editIndex;
+    row = document.querySelector(`.contact-row[data-contact-index='${idx}']`);
+    if (!row) {
+      console.error('Could not find row to edit with index', idx);
+      return;
+    }
+  } else {
+    // Create new row from template
+    const tpl = document.getElementById('contact-tpl');
+    const clone = tpl.content.cloneNode(true);
+    row = clone.querySelector('tr');
+    idx = contactCount;
+    row.dataset.contactIndex = idx;
 
-  // Is this the first contact? Make it primary
-  const isPrimary = (contactCount === 0);
-  if (isPrimary) {
-    row.querySelector('.primary-check').checked = true;
-    row.classList.add('contact-primary-row');
+    // First contact gets PRIMARY badge
+    if (contactCount === 0) {
+      row.querySelector('.primary-check').checked = true;
+      row.classList.add('contact-primary-row');
+      const badge = row.querySelector('.contact-primary-badge');
+      if (badge) badge.style.display = 'inline-block';
+      const setBtn = row.querySelector('.set-primary-btn');
+      if (setBtn) setBtn.style.display = 'none';
+    }
   }
 
-  // Gather values
-  const cId = document.getElementById('contact_id').value;
-  const cName = document.getElementById('contact_name').value;
-  const cType = document.getElementById('contact_contact_type').value;
-  const cMobile = document.getElementById('contact_mobile').value;
-  const cWa = document.getElementById('contact_whatsapp').value;
+  // Gather values from modal form
+  const cId    = document.getElementById('contact_id').value;
+  const cName  = document.getElementById('contact_name').value;
+  const cType  = document.getElementById('contact_contact_type').value;
+  const cMobile= document.getElementById('contact_mobile').value;
+  const cWa    = document.getElementById('contact_whatsapp').value;
   const cEmail = document.getElementById('contact_email').value;
-  const cOrg = document.getElementById('contact_organization_name').value;
-  const cWeb = document.getElementById('contact_website').value;
-  const cAddr = document.getElementById('contact_address').value;
-  const cCity = document.getElementById('contact_city').value;
+  const cOrg   = document.getElementById('contact_organization_name').value;
+  const cWeb   = document.getElementById('contact_website').value;
+  const cAddr  = document.getElementById('contact_address').value;
+  const cCity  = document.getElementById('contact_city').value;
   const cState = document.getElementById('contact_state').value;
-  const cPin = document.getElementById('contact_pincode').value;
+  const cPin   = document.getElementById('contact_pincode').value;
   const cCards = document.getElementById('contact_existing_cards').value;
 
-  // Set display text
+  // ---- Update Display cells ----
   const nameDisplay = row.querySelector('.contact-name-display');
   if (nameDisplay) nameDisplay.textContent = cName;
+
   const typeDisplay = row.querySelector('.contact-contact-type-display');
   if (typeDisplay) typeDisplay.textContent = cType;
-  const mobileDisplay = row.querySelector('.contact-mobile-display');
-  if (mobileDisplay) mobileDisplay.textContent = cMobile;
-  const whatsappDisplay = row.querySelector('.contact-whatsapp-display');
-  if (whatsappDisplay) whatsappDisplay.textContent = cWa ? `WA: ${cWa}` : '';
-  const emailDisplay = row.querySelector('.contact-email-display');
-  if (emailDisplay) emailDisplay.textContent = cEmail || '-';
 
-  // Set hidden inputs
-  row.querySelector('.contact-id-input').name = `contacts[${idx}][master_contact_id]`;
+  // Reset contact info visibility first (for edits)
+  row.querySelector('.contact-mobile-container').classList.add('d-none');
+  row.querySelector('.contact-whatsapp-container').classList.add('d-none');
+  row.querySelector('.contact-email-container').classList.add('d-none');
+
+  if (cMobile) {
+    const el = row.querySelector('.contact-mobile-display');
+    row.querySelector('.contact-mobile-container').classList.remove('d-none');
+    if (el) { el.textContent = cMobile; el.href = 'tel:' + cMobile; }
+  }
+  if (cWa) {
+    const el = row.querySelector('.contact-whatsapp-display');
+    row.querySelector('.contact-whatsapp-container').classList.remove('d-none');
+    if (el) { el.textContent = cWa; el.href = 'https://wa.me/' + cWa.replace(/[^0-9]/g, ''); }
+  }
+  if (cEmail) {
+    const el = row.querySelector('.contact-email-display');
+    row.querySelector('.contact-email-container').classList.remove('d-none');
+    if (el) { el.textContent = cEmail; el.href = 'mailto:' + cEmail; }
+  }
+
+  const orgSec = row.querySelector('.contact-org-section');
+  if (orgSec) {
+    if (cOrg || cAddr || cCity || cState || cPin || cWeb) {
+      orgSec.classList.remove('d-none');
+      const orgNameCont = row.querySelector('.contact-org-name-container');
+      const orgNameDisp = row.querySelector('.contact-organization-name-display');
+      if (cOrg) {
+        if (orgNameCont) orgNameCont.classList.remove('d-none');
+        if (orgNameDisp) orgNameDisp.textContent = cOrg;
+      } else {
+        if (orgNameCont) orgNameCont.classList.add('d-none');
+      }
+      const addrCont = row.querySelector('.contact-address-display-container');
+      const addrDisp = row.querySelector('.contact-address-display');
+      if (cAddr || cCity || cState || cPin) {
+        if (addrCont) addrCont.classList.remove('d-none');
+        if (addrDisp) addrDisp.textContent = [cAddr, cCity, cState, cPin].filter(Boolean).join(', ');
+      } else {
+        if (addrCont) addrCont.classList.add('d-none');
+      }
+      const webCont = row.querySelector('.contact-website-container');
+      const webDisp = row.querySelector('.contact-website-display');
+      if (cWeb) {
+        if (webCont) webCont.classList.remove('d-none');
+        if (webDisp) webDisp.href = cWeb;
+      } else {
+        if (webCont) webCont.classList.add('d-none');
+      }
+    } else {
+      orgSec.classList.add('d-none');
+    }
+  }
+
+  // ---- Set hidden inputs (wire names for form submission) ----
+  row.querySelector('.contact-id-input').name  = `contacts[${idx}][master_contact_id]`;
   row.querySelector('.contact-id-input').value = cId;
 
-  row.querySelector('.contact-name-input').name = `contacts[${idx}][name]`;
+  row.querySelector('.contact-name-input').name  = `contacts[${idx}][name]`;
   row.querySelector('.contact-name-input').value = cName;
 
-  row.querySelector('.contact-contact-type-input').name = `contacts[${idx}][type]`;
+  row.querySelector('.contact-contact-type-input').name  = `contacts[${idx}][type]`;
   row.querySelector('.contact-contact-type-input').value = cType;
 
-  row.querySelector('.contact-mobile-input').name = `contacts[${idx}][mobile]`;
+  row.querySelector('.contact-mobile-input').name  = `contacts[${idx}][mobile]`;
   row.querySelector('.contact-mobile-input').value = cMobile;
 
-  row.querySelector('.contact-whatsapp-input').name = `contacts[${idx}][whatsapp]`;
+  row.querySelector('.contact-whatsapp-input').name  = `contacts[${idx}][whatsapp]`;
   row.querySelector('.contact-whatsapp-input').value = cWa;
 
-  row.querySelector('.contact-email-input').name = `contacts[${idx}][email]`;
+  row.querySelector('.contact-email-input').name  = `contacts[${idx}][email]`;
   row.querySelector('.contact-email-input').value = cEmail;
 
-  row.querySelector('.contact-organization-name-input').name = `contacts[${idx}][organization_name]`;
+  row.querySelector('.contact-organization-name-input').name  = `contacts[${idx}][organization_name]`;
   row.querySelector('.contact-organization-name-input').value = cOrg;
 
-  row.querySelector('.contact-website-input').name = `contacts[${idx}][website]`;
+  row.querySelector('.contact-website-input').name  = `contacts[${idx}][website]`;
   row.querySelector('.contact-website-input').value = cWeb;
 
-  row.querySelector('.contact-address-input').name = `contacts[${idx}][address]`;
+  row.querySelector('.contact-address-input').name  = `contacts[${idx}][address]`;
   row.querySelector('.contact-address-input').value = cAddr;
 
-  row.querySelector('.contact-city-input').name = `contacts[${idx}][city]`;
+  row.querySelector('.contact-city-input').name  = `contacts[${idx}][city]`;
   row.querySelector('.contact-city-input').value = cCity;
 
-  row.querySelector('.contact-state-input').name = `contacts[${idx}][state]`;
+  row.querySelector('.contact-state-input').name  = `contacts[${idx}][state]`;
   row.querySelector('.contact-state-input').value = cState;
 
-  row.querySelector('.contact-pincode-input').name = `contacts[${idx}][pincode]`;
+  row.querySelector('.contact-pincode-input').name  = `contacts[${idx}][pincode]`;
   row.querySelector('.contact-pincode-input').value = cPin;
 
-  row.querySelector('.contact-existing-cards-input').name = `contacts[${idx}][existing_card]`;
+  row.querySelector('.contact-existing-cards-input').name  = `contacts[${idx}][existing_card]`;
   row.querySelector('.contact-existing-cards-input').value = cCards;
 
   row.querySelector('.primary-check').name = `contacts[${idx}][is_primary]`;
 
-  // Handle files transfer
+  // ---- Handle visiting card file uploads ----
   const fileInputDevice = document.getElementById('contact_visiting_card_device');
   const fileInputCamera = document.getElementById('contact_visiting_card_camera');
+  const filesContainer  = row.querySelector('.contact-file-inputs-container');
 
-  const filesContainer = row.querySelector('.contact-file-inputs-container');
+  // Clear old file inputs in container (for edits)
+  filesContainer.innerHTML = '';
+
   let totalCards = 0;
-
   if (cCards) {
-      try {
-          const arr = JSON.parse(cCards);
-          if (Array.isArray(arr)) totalCards += arr.length;
-          else if (typeof cCards === 'string' && cCards.length > 5) totalCards += 1;
-      } catch(e) {}
+    try {
+      const arr = JSON.parse(cCards);
+      if (Array.isArray(arr)) totalCards += arr.length;
+      else if (typeof cCards === 'string' && cCards.length > 5) totalCards += 1;
+    } catch(err) {}
   }
 
   const dt = new DataTransfer();
-  if (fileInputDevice.files.length > 0) {
-      Array.from(fileInputDevice.files).forEach(f => dt.items.add(f));
+  if (fileInputDevice && fileInputDevice.files.length > 0) {
+    Array.from(fileInputDevice.files).forEach(f => dt.items.add(f));
   }
-  if (fileInputCamera.files.length > 0) {
-      Array.from(fileInputCamera.files).forEach(f => dt.items.add(f));
+  if (fileInputCamera && fileInputCamera.files.length > 0) {
+    Array.from(fileInputCamera.files).forEach(f => dt.items.add(f));
   }
-
   if (dt.files.length > 0) {
-      const newFileInput = document.createElement('input');
-      newFileInput.type = 'file';
-      newFileInput.name = `contacts[${idx}][card_file][]`;
-      newFileInput.multiple = true;
-      newFileInput.files = dt.files;
-      filesContainer.appendChild(newFileInput);
-      totalCards += dt.files.length;
+    const newFileInput = document.createElement('input');
+    newFileInput.type     = 'file';
+    newFileInput.name     = `contacts[${idx}][card_file][]`;
+    newFileInput.multiple = true;
+    newFileInput.files    = dt.files;
+    filesContainer.appendChild(newFileInput);
+    totalCards += dt.files.length;
   }
 
   const cardsCount = row.querySelector('.contact-cards-count');
-  if (cardsCount) cardsCount.textContent = totalCards + ' Cards';
+  if (cardsCount) cardsCount.textContent = totalCards > 0 ? totalCards + ' Card(s)' : '';
 
-  document.getElementById('contacts-tbody').appendChild(row);
+  // Only append the row to the table if it's a NEW contact (not an edit)
+  if (!isEdit) {
+    document.getElementById('contacts-tbody').appendChild(row);
+    contactCount++;
+    updateContactBadge();
+    updateMeetingWithDropdown();
+  }
 
-  contactCount++;
-  updateContactBadge();
-  updateMeetingWithDropdown();
-
-  // Close Modal
+  // Close the modal
   const modalEl = document.getElementById('contactModal');
   const modal = bootstrap.Modal.getInstance(modalEl);
   if (modal) modal.hide();
 });
 
+function setPrimaryContactNew(btn) {
+  const allRows = document.querySelectorAll('.contact-row');
+  allRows.forEach(row => {
+    const cb = row.querySelector('.primary-check');
+    if (cb) cb.checked = false;
+    const badge = row.querySelector('.contact-primary-badge');
+    if (badge) badge.style.display = 'none';
+    const setBtn = row.querySelector('.set-primary-btn');
+    if (setBtn) setBtn.style.display = 'inline-block';
+  });
+
+  const row = btn.closest('tr');
+  const cb = row.querySelector('.primary-check');
+  if (cb) cb.checked = true;
+  const badge = row.querySelector('.contact-primary-badge');
+  if (badge) badge.style.display = 'inline-block';
+  btn.style.display = 'none';
+}
+
 </script>
 
 <?php include __DIR__ . '/../../includes/footer.php'; ?>
+
