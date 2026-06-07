@@ -1140,6 +1140,8 @@ function fetchLocationForCard(btn) {
           const address = data.display_name || `Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}`;
           // Store full address in hidden field (used for green preview)
           gAddress.value = address;
+          // Show full address in the search input as well
+          gSearch.value = address;
 
           // Auto-fill standard inputs if empty
           const details = data.address || {};
