@@ -199,62 +199,66 @@
   }
 
   // ── D. MOBILE BACK-BUTTON GUARD ────────────────────────────────────────────
-  function initMobileBackGuard() {
-    const hasForms = document.querySelectorAll('form[data-guard], form[data-autosave]').length > 0;
-    if (!hasForms) return;
+  function injectBackConfirmModal() {
+    if (document.getElementById('navGuardBackModal')) return;
+    const modal = document.createElement('div');
+    modal.innerHTML = `
+      <div class="modal fade" id="navGuardBackModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content border-0 shadow-lg" style="border-radius:14px;">
+            <div class="modal-header border-0 pb-0">
+              <div class="d-flex align-items-center gap-2">
+                <div style="width:38px;height:38px;background:#fef2f2;border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                  <i class="bi bi-box-arrow-left text-danger fs-5"></i>
+                </div>
+                <h5 class="modal-title fw-bold">Exit Application?</h5>
+              </div>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-2 pb-2">
+              <p class="text-muted mb-0" id="backModalMsg">Are you sure you want to go back? Any unsaved changes will be lost.</p>
+            </div>
+            <div class="modal-footer border-0">
+              <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Stay Here</button>
+              <button type="button" class="btn btn-danger btn-sm fw-semibold" id="navGuardBackConfirmBtn">Yes, Exit</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(modal.firstElementChild);
 
-    // Push a fake state so we can intercept the back event
-    history.pushState({ navGuard: true }, '');
-
-    window.addEventListener('popstate', function(e) {
-      if (formSubmitting) return;
-
-      if (isDirty()) {
-        // Always intercept if form is dirty
-        history.pushState({ navGuard: true }, '');
-        showBackToast('You have unsaved changes! Save or submit the form before leaving.', 'warning');
-        return;
-      }
-
-      if (isMobile()) {
-        if (backPressedOnce) {
-          // Second press — allow navigation
-          clearTimeout(backPressTimer);
-          backPressedOnce = false;
-          history.back();
-          return;
-        }
-        // First press
-        backPressedOnce = true;
-        history.pushState({ navGuard: true }, '');
-        showBackToast('Press Back again to exit this page');
-        backPressTimer = setTimeout(() => { backPressedOnce = false; }, BACK_PRESS_WINDOW);
-      }
+    document.getElementById('navGuardBackConfirmBtn').addEventListener('click', function() {
+      // Allow navigation to proceed
+      window.navGuardAllowBack = true;
+      history.back();
+      const m = bootstrap.Modal.getInstance(document.getElementById('navGuardBackModal'));
+      if (m) m.hide();
     });
   }
 
-  function showBackToast(message, type = 'info') {
-    let container = document.getElementById('navGuardBackToastContainer');
-    if (!container) {
-      container = document.createElement('div');
-      container.id = 'navGuardBackToastContainer';
-      container.className = 'position-fixed bottom-0 start-50 translate-middle-x pb-4';
-      container.style.cssText = 'z-index: 99999; pointer-events: none;';
-      document.body.appendChild(container);
-    }
-    const colors = { info: '#1e293b', warning: '#92400e' };
-    const bg     = type === 'warning' ? '#fef3c7' : '#1e293b';
-    const fg     = type === 'warning' ? '#92400e' : '#ffffff';
-    const toastEl = document.createElement('div');
-    toastEl.style.cssText = `
-      background:${bg}; color:${fg}; padding:12px 24px;
-      border-radius:24px; font-size:14px; font-weight:600;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
-      pointer-events:auto; animation: fadeInUp 0.3s ease;
-    `;
-    toastEl.textContent = message;
-    container.appendChild(toastEl);
-    setTimeout(() => toastEl.remove(), BACK_PRESS_WINDOW);
+  function initMobileBackGuard() {
+    // We apply this to all pages, not just forms, to ensure consistent mobile exit behavior
+    injectBackConfirmModal();
+
+    // Push a fake state to intercept the back button
+    history.pushState({ navGuard: true }, '');
+
+    window.addEventListener('popstate', function(e) {
+      if (formSubmitting || window.navGuardAllowBack) return;
+
+      // Intercept the back button
+      history.pushState({ navGuard: true }, '');
+
+      const msg = document.getElementById('backModalMsg');
+      if (isDirty()) {
+        msg.innerHTML = '<span class="text-danger fw-semibold"><i class="bi bi-exclamation-triangle me-1"></i>You have unsaved changes!</span><br>Are you sure you want to exit without saving?';
+      } else {
+        msg.innerHTML = 'Are you sure you want to go back/exit?';
+      }
+
+      const modal = new bootstrap.Modal(document.getElementById('navGuardBackModal'));
+      modal.show();
+    });
   }
 
   // ── E. AUTO-SAVE DRAFTS ────────────────────────────────────────────────────
