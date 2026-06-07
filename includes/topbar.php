@@ -27,7 +27,7 @@ requireLogin();
       <ul class="dropdown-menu dropdown-menu-end" style="border-radius:10px">
         <li><a class="dropdown-item small" href="<?= BASE_URL ?>/modules/settings/index.php"><i class="bi bi-gear me-2"></i>Settings</a></li>
         <li><hr class="dropdown-divider"></li>
-        <li><a class="dropdown-item small text-danger" href="<?= BASE_URL ?>/modules/auth/logout.php"><i class="bi bi-box-arrow-left me-2"></i>Logout</a></li>
+        <li><a class="dropdown-item small text-danger" href="#" data-bs-toggle="modal" data-bs-target="#globalLogoutModal"><i class="bi bi-box-arrow-left me-2"></i>Logout</a></li>
       </ul>
     </div>
   </div>
