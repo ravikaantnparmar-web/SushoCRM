@@ -240,20 +240,32 @@
     // We apply this to all pages, not just forms, to ensure consistent mobile exit behavior
     injectBackConfirmModal();
 
-    // Push a fake state to intercept the back button
-    history.pushState({ navGuard: true }, '');
+    // Browsers ignore pushState traps on initial load if there's no user interaction.
+    // We push the state immediately, but also on the first touch/click to guarantee it sticks.
+    let statePushed = false;
+    const pushStateTrap = () => {
+      if (!statePushed) {
+        history.pushState({ navGuard: true }, '');
+        statePushed = true;
+      }
+    };
+
+    pushStateTrap(); // Try immediately
+    document.addEventListener('touchstart', pushStateTrap, { once: true, passive: true });
+    document.addEventListener('click', pushStateTrap, { once: true, passive: true });
+    document.addEventListener('scroll', pushStateTrap, { once: true, passive: true });
 
     window.addEventListener('popstate', function(e) {
       if (formSubmitting || window.navGuardAllowBack) return;
 
-      // Intercept the back button
+      // Intercept the back button and maintain the trap
       history.pushState({ navGuard: true }, '');
 
       const msg = document.getElementById('backModalMsg');
       if (isDirty()) {
         msg.innerHTML = '<span class="text-danger fw-semibold"><i class="bi bi-exclamation-triangle me-1"></i>You have unsaved changes!</span><br>Are you sure you want to exit without saving?';
       } else {
-        msg.innerHTML = 'Are you sure you want to go back/exit?';
+        msg.innerHTML = 'Are you sure you want to exit the application?';
       }
 
       const modal = new bootstrap.Modal(document.getElementById('navGuardBackModal'));
