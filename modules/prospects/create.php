@@ -491,9 +491,9 @@ include __DIR__ . '/../../includes/header.php';
             1 Contact
           </span>
           <div class="ms-auto d-flex gap-2" onclick="event.stopPropagation()">
-            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addContact()"
+            <button type="button" class="btn btn-sm btn-outline-primary" onclick="showAddContactModal()"
                     style="font-size:12px;">
-              <i class="bi bi-plus-lg me-1"></i>Add Blank Contact
+              <i class="bi bi-plus-lg me-1"></i>Add Contact
             </button>
             <button type="button" class="btn btn-sm btn-success"
                     onclick="document.getElementById('submit-btn').click()" style="font-size:12px;">
@@ -875,111 +875,6 @@ function toggleSection(header) {
   icon.classList.toggle('bi-chevron-down');
 }
 
-function addContact(isPrimary = false) {
-  const tpl = document.getElementById('contact-tpl');
-  const clone = tpl.content.cloneNode(true);
-  const row = clone.querySelector('tr');
-  const idx = contactCount;
-
-  row.dataset.contactIndex = idx;
-  if (isPrimary) row.classList.add('contact-primary-row');
-
-  // Set input names based on indices
-  row.querySelector('.contact-id-input').name = `contacts[${idx}][master_contact_id]`;
-  row.querySelector('.contact-name-input').name = `contacts[${idx}][name]`;
-  row.querySelector('.contact-email-input').name = `contacts[${idx}][email]`;
-  row.querySelector('.contact-mobile-input').name = `contacts[${idx}][mobile]`;
-  row.querySelector('.contact-whatsapp-input').name = `contacts[${idx}][whatsapp]`;
-  row.querySelector('.contact-card-file-input').name = `contacts[${idx}][card_file][]`;
-  row.querySelector('.contact-card-file-input').setAttribute('onchange', `previewRowContactCard(this, ${idx})`);
-  row.querySelector('.contact-card-previews').id = `contact_card_previews_${idx}`;
-  
-  const primaryCheck = row.querySelector('.primary-check');
-  primaryCheck.name = `contacts[${idx}][is_primary]`;
-
-  if (isPrimary) {
-    primaryCheck.checked = true;
-  } else {
-    row.querySelector('.remove-btn').style.display = 'inline-flex';
-  }
-
-  document.getElementById('contacts-tbody').appendChild(clone);
-  
-  // Attach inline search logic
-  const rowElement = document.getElementById('contacts-tbody').lastElementChild;
-  initRowContactSearch(rowElement);
-  
-  contactCount++;
-  updateContactBadge();
-  updateMeetingWithDropdown();
-}
-
-function initRowContactSearch(row) {
-    const searchInput = row.querySelector('.contact-name-input');
-    const resultsContainer = row.querySelector('.contact-search-results');
-    
-    if (searchInput && resultsContainer) {
-        let debounceTimer;
-        searchInput.addEventListener('input', function() {
-            clearTimeout(debounceTimer);
-            const val = this.value.trim();
-            if (val.length < 2) {
-                resultsContainer.style.display = 'none';
-                return;
-            }
-            
-            debounceTimer = setTimeout(() => {
-                fetch('<?= BASE_URL ?>/modules/contacts/search_ajax.php?q=' + encodeURIComponent(val))
-                .then(r => r.json())
-                .then(data => {
-                    resultsContainer.innerHTML = '';
-                    if (data.results && data.results.length > 0) {
-                        data.results.forEach(item => {
-                            const a = document.createElement('a');
-                            a.href = '#';
-                            a.className = 'list-group-item list-group-item-action py-2';
-                            
-                            let subtitle = '';
-                            if(item.contact.organization_name) subtitle += item.contact.organization_name;
-                            if(item.contact.mobile) subtitle += (subtitle ? ' | ' : '') + item.contact.mobile;
-                            
-                            a.innerHTML = `<div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1">${item.contact.name}</h6>
-                                <small style="font-size: 10px;">${item.contact.contact_type || ''}</small>
-                            </div>
-                            <small class="text-muted" style="font-size: 10px;">${subtitle}</small>`;
-                            
-                            a.addEventListener('click', function(e) {
-                                e.preventDefault();
-                                row.querySelector('.contact-id-input').value = item.id;
-                                row.querySelector('.contact-name-input').value = item.contact.name || '';
-                                row.querySelector('.contact-mobile-input').value = item.contact.mobile || '';
-                                row.querySelector('.contact-whatsapp-input').value = item.contact.whatsapp || '';
-                                row.querySelector('.contact-email-input').value = item.contact.email || '';
-                                
-                                resultsContainer.style.display = 'none';
-                                updateMeetingWithDropdown();
-                            });
-                            resultsContainer.appendChild(a);
-                        });
-                        resultsContainer.style.display = 'block';
-                    } else {
-                        resultsContainer.innerHTML = '<div class="list-group-item text-muted small py-2">No master contact found. A new one will be created.</div>';
-                        resultsContainer.style.display = 'block';
-                        row.querySelector('.contact-id-input').value = '';
-                    }
-                });
-            }, 300);
-        });
-        
-        document.addEventListener('click', function(e) {
-            if (e.target !== searchInput && e.target !== resultsContainer && !resultsContainer.contains(e.target)) {
-                resultsContainer.style.display = 'none';
-            }
-        });
-    }
-}
-
 function removeContact(btn) {
   btn.closest('tr').remove();
   updateContactBadge();
@@ -1076,8 +971,7 @@ function clearGoogleLocation() {
   document.getElementById('google-address-preview').classList.add('d-none');
 }
 
-// Init: add first primary contact on page load
-addContact(true);
+// Init removed since we use Modal now
 
 let addressCount = 0;
 function addAddress(isPrimary = false) {
@@ -1275,9 +1169,6 @@ function fetchLocationForCard(btn) {
 
 // Init: add first primary address on page load
 addAddress(true);
-
-// Init: add first primary contact on page load - Removed since we use Modal now
-// addContact(true);
 
 function showAddContactModal() {
   document.getElementById('contactForm').reset();
