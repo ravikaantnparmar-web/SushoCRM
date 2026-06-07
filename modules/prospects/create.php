@@ -1194,7 +1194,7 @@ function fetchLocationForCard(btn) {
 }
 
 // Init: add first primary address on page load
-addAddress(true);
+try { addAddress(true); } catch(e) { console.error('addAddress init failed:', e); }
 
 function showAddContactModal() {
   document.getElementById('contactForm').reset();
@@ -1292,7 +1292,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Handle Modal Submission for Create/Edit Pages (No AJAX)
-document.getElementById('contactForm').addEventListener('submit', function(e) {
+const contactFormEl = document.getElementById('contactForm');
+if (contactFormEl) {
+contactFormEl.addEventListener('submit', function(e) {
   e.preventDefault();
   
   const tpl = document.getElementById('contact-tpl');
@@ -1389,10 +1391,10 @@ document.getElementById('contactForm').addEventListener('submit', function(e) {
   }
   
   const dt = new DataTransfer();
-  if (fileInputDevice.files.length > 0) {
+  if (fileInputDevice && fileInputDevice.files.length > 0) {
       Array.from(fileInputDevice.files).forEach(f => dt.items.add(f));
   }
-  if (fileInputCamera.files.length > 0) {
+  if (fileInputCamera && fileInputCamera.files.length > 0) {
       Array.from(fileInputCamera.files).forEach(f => dt.items.add(f));
   }
   
@@ -1419,5 +1421,6 @@ document.getElementById('contactForm').addEventListener('submit', function(e) {
   const modal = bootstrap.Modal.getInstance(modalEl);
   if (modal) modal.hide();
 });
+} // end if(contactFormEl)
 
 <?php include __DIR__ . '/../../includes/footer.php'; ?>
