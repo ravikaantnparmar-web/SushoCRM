@@ -808,7 +808,106 @@ include __DIR__ . '/../../includes/header.php';
 </div><!-- /.page-content -->
 </div><!-- /.main-content -->
 
-<?php include __DIR__ . '/../../includes/contact_modal_ui.php'; ?>
+<!-- Contact Modal — inlined directly for production reliability -->
+<div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <form id="contactForm" enctype="multipart/form-data">
+      <input type="hidden" name="id" id="contact_id">
+      <input type="hidden" name="lead_id" id="contact_lead_id" value="<?= isset($id) ? (int)$id : '' ?>">
+      <input type="hidden" name="mode" id="contact_form_mode" value="create">
+      <input type="hidden" name="existing_cards" id="contact_existing_cards">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="contactModalLabel">Add Contact</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-12 mb-2 bg-light p-3 rounded border">
+              <label class="form-label fw-bold text-primary mb-1"><i class="bi bi-search me-1"></i>Search Existing Master Contact</label>
+              <div class="position-relative">
+                <input type="text" id="contact_search" class="form-control border-primary" placeholder="Type name, mobile, email or organization to search..." autocomplete="off">
+                <div id="contact_search_results" class="list-group position-absolute w-100 shadow" style="display:none; z-index:1050; max-height:250px; overflow-y:auto;"></div>
+              </div>
+              <small class="text-muted mt-1 d-block">Selecting an existing contact will link it to this lead.</small>
+            </div>
+            <div class="col-12"><hr class="my-0"></div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Name <span class="text-danger">*</span></label>
+              <input type="text" name="name" id="contact_name" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Contact Type <span class="text-danger">*</span></label>
+              <select name="contact_type" id="contact_contact_type" class="form-select" required>
+                <?php
+                $safeContactTypes = isset($contactTypes) && is_array($contactTypes) ? $contactTypes : ['Owner','Partner','Manager','Executive','Architect','Contractor','Dealer','Other'];
+                foreach($safeContactTypes as $ct): ?>
+                  <option value="<?= e($ct) ?>"><?= e($ct) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Mobile <span class="text-danger">*</span></label>
+              <input type="text" name="mobile" id="contact_mobile" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">WhatsApp</label>
+              <input type="text" name="whatsapp" id="contact_whatsapp" class="form-control">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Email</label>
+              <input type="email" name="email" id="contact_email" class="form-control">
+            </div>
+            <div class="col-12"><hr class="my-2"><h6 class="fw-bold mb-0">Organization Details (Optional)</h6></div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Organization Name</label>
+              <input type="text" name="organization_name" id="contact_organization_name" class="form-control">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Website</label>
+              <input type="url" name="website" id="contact_website" class="form-control">
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Address</label>
+              <textarea name="address" id="contact_address" class="form-control" rows="2"></textarea>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">City</label>
+              <input type="text" name="city" id="contact_city" class="form-control">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">State</label>
+              <input type="text" name="state" id="contact_state" class="form-control">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Pincode</label>
+              <input type="text" name="pincode" id="contact_pincode" class="form-control">
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold d-block">Visiting Card</label>
+              <div class="d-flex gap-2 mb-2">
+                <label class="btn btn-outline-secondary flex-grow-1 text-center">
+                  <i class="bi bi-folder2"></i> Upload from Device
+                  <input type="file" name="visiting_card[]" id="contact_visiting_card_device" class="d-none" multiple accept="image/*" onchange="previewCardFiles(this)">
+                </label>
+                <label class="btn btn-outline-secondary flex-grow-1 text-center">
+                  <i class="bi bi-camera"></i> Take Photo
+                  <input type="file" name="visiting_card[]" id="contact_visiting_card_camera" class="d-none" multiple accept="image/*" capture="environment" onchange="previewCardFiles(this)">
+                </label>
+              </div>
+              <div id="visiting_cards_new_preview" class="d-flex gap-2 flex-wrap mb-2"></div>
+              <div id="existing_cards_preview" class="mt-2 d-flex gap-2 flex-wrap"></div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="contactSubmitBtn">Save Contact</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
 
 <!-- CONTACT ROW TEMPLATE -->
 <template id="contact-tpl">
@@ -1075,38 +1174,70 @@ function clearGoogleLocation() {
 // Init removed since we use Modal now
 
 // addressCount starts at 1 because index 0 is pre-rendered by PHP
+const ADDRESS_TYPES = <?= json_encode(isset($addressTypes)&&is_array($addressTypes)?$addressTypes:['Site Address','Office Address','Factory Address','Warehouse Address','Other']) ?>;
 let addressCount = 1;
+
 function addAddress(isPrimary = false) {
-  const tpl = document.getElementById('address-tpl');
-  const clone = tpl.content.cloneNode(true);
-  const card = clone.querySelector('.address-card');
+  const container = document.getElementById('addresses-container');
+  if (!container) return;
   const idx = addressCount;
-  
-  card.dataset.addressIndex = idx;
-  
-  card.querySelector('.address-type-input').name = `addresses[${idx}][address_type]`;
-  card.querySelector('.primary-address-check').name = `addresses[${idx}][is_primary]`;
-  card.querySelector('.addr-line1').name = `addresses[${idx}][address_line1]`;
-  card.querySelector('.addr-line2').name = `addresses[${idx}][address_line2]`;
-  card.querySelector('.addr-area').name = `addresses[${idx}][area]`;
-  card.querySelector('.addr-city').name = `addresses[${idx}][city]`;
-  card.querySelector('.addr-state').name = `addresses[${idx}][state]`;
-  card.querySelector('.addr-pincode').name = `addresses[${idx}][pincode]`;
-  
-  card.querySelector('.addr-gaddress').name = `addresses[${idx}][google_address]`;
-  card.querySelector('.addr-glink').name = `addresses[${idx}][google_maps_link]`;
-  card.querySelector('.addr-lat').name = `addresses[${idx}][lat]`;
-  card.querySelector('.addr-lng').name = `addresses[${idx}][lng]`;
-  card.querySelector('.addr-gcode').name = `addresses[${idx}][google_location]`;
 
-  if (isPrimary) {
-    card.querySelector('.primary-address-check').checked = true;
-    card.querySelector('.address-type-input').value = 'Site Address'; // default
-  } else {
-    card.querySelector('.remove-address-btn').style.display = 'inline-block';
-  }
+  const addrTypeOpts = ADDRESS_TYPES.map(t =>
+    `<option value="${t}">${t}</option>`
+  ).join('');
 
-  document.getElementById('addresses-container').appendChild(clone);
+  const stateOpts = ['Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat','Haryana','Himachal Pradesh','Jammu and Kashmir','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal','Delhi','Ladakh','Puducherry','Chandigarh','Dadra and Nagar Haveli','Daman and Diu','Lakshadweep','Andaman and Nicobar Islands'].map(s => `<option value="${s}">${s}</option>`).join('');
+
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = `
+    <div class="address-card p-3 bg-white border rounded mb-3 position-relative shadow-sm" data-address-index="${idx}">
+      <button type="button" class="btn btn-sm btn-outline-danger position-absolute remove-address-btn" onclick="removeAddress(this)" style="top:10px;right:10px;font-size:11px;display:inline-block;"><i class="bi bi-trash"></i> Remove</button>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label text-orange"><i class="bi bi-tag-fill me-1"></i>Address Type</label>
+          <select class="form-select address-type-input" name="addresses[${idx}][address_type]"><option value="">Select Type</option>${addrTypeOpts}</select>
+        </div>
+        <div class="col-md-8">
+          <div class="d-flex align-items-center h-100 pt-4">
+            <div class="form-check form-switch">
+              <input class="form-check-input primary-address-check" type="checkbox" role="switch" name="addresses[${idx}][is_primary]" value="1" onchange="handlePrimaryAddress(this)">
+              <label class="form-check-label text-muted" style="font-size:12px;">Set as Primary Address</label>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6"><label class="form-label">Address Line 1</label><input type="text" class="form-control addr-line1" name="addresses[${idx}][address_line1]" placeholder="House / Flat / Building No."></div>
+        <div class="col-md-6"><label class="form-label">Address Line 2</label><input type="text" class="form-control addr-line2" name="addresses[${idx}][address_line2]" placeholder="Street, Road, Colony"></div>
+        <div class="col-md-3"><label class="form-label">Area</label><input type="text" class="form-control addr-area" name="addresses[${idx}][area]" placeholder="Area / Locality"></div>
+        <div class="col-md-3"><label class="form-label">City</label><input type="text" class="form-control addr-city" name="addresses[${idx}][city]" placeholder="City"></div>
+        <div class="col-md-4"><label class="form-label">State</label><select class="form-select addr-state" name="addresses[${idx}][state]"><option value="">Select State</option>${stateOpts}</select></div>
+        <div class="col-md-2"><label class="form-label">Pincode</label><input type="text" class="form-control addr-pincode" name="addresses[${idx}][pincode]" placeholder="000000" maxlength="6" pattern="[0-9]{6}"></div>
+        <div class="col-12"><div class="ls-sub-label">Google Map Location (Optional)</div></div>
+        <div class="col-12">
+          <div class="d-flex align-items-center gap-2">
+            <div class="input-group shadow-sm" style="flex:1 1 0;min-width:0;">
+              <span class="input-group-text bg-white border-end-0 pe-1"><i class="bi bi-geo-alt-fill text-danger" style="font-size:13px;"></i></span>
+              <input type="text" class="form-control addr-gsearch border-start-0" placeholder="Search address or click Locate Me to use GPS...">
+              <button type="button" class="btn btn-outline-primary btn-fetch-location d-flex align-items-center gap-1 px-3" onclick="fetchLocationForCard(this)"><i class="bi bi-geo-fill"></i> <span class="small fw-semibold">Locate Me</span></button>
+            </div>
+            <div class="addr-preview-container d-none flex-shrink-0" style="max-width:42%;">
+              <div class="p-2 bg-light rounded border small d-flex align-items-center gap-1">
+                <i class="bi bi-check-circle-fill text-success flex-shrink-0"></i>
+                <span class="addr-preview-text text-success fw-medium text-truncate" style="max-width:130px;"></span>
+                <a href="#" target="_blank" class="btn btn-sm btn-outline-success addr-preview-map-link flex-shrink-0 d-none" style="font-size:10px;padding:2px 6px;"><i class="bi bi-map-fill me-1"></i>Map</a>
+                <a href="#" target="_blank" class="btn btn-sm btn-outline-primary addr-preview-dir-link flex-shrink-0" style="font-size:10px;padding:2px 6px;"><i class="bi bi-cursor-fill me-1"></i>Directions</a>
+              </div>
+            </div>
+          </div>
+          <input type="hidden" class="addr-gaddress" name="addresses[${idx}][google_address]">
+          <input type="hidden" class="addr-glink" name="addresses[${idx}][google_maps_link]">
+          <input type="hidden" class="addr-lat" name="addresses[${idx}][lat]">
+          <input type="hidden" class="addr-lng" name="addresses[${idx}][lng]">
+          <input type="hidden" class="addr-gcode" name="addresses[${idx}][google_location]">
+        </div>
+      </div>
+    </div>`;
+
+  container.appendChild(wrapper.firstElementChild);
   addressCount++;
   updateAddressBadge();
 }
@@ -1273,20 +1404,22 @@ function fetchLocationForCard(btn) {
 // First address card is pre-rendered by PHP — no JS init needed
 
 function showAddContactModal() {
-  document.getElementById('contactForm').reset();
-  document.getElementById('contact_id').value = '';
-  document.getElementById('contact_existing_cards').value = '';
-  document.getElementById('contact_form_mode').value = 'create';
-  
-  document.getElementById('contactModalLabel').textContent = 'Add Contact';
-  
-  // Clear any existing preview cards
-  const newPreviews = document.getElementById('visiting_cards_new_preview');
-  if (newPreviews) newPreviews.innerHTML = '';
-  const existingPreviews = document.getElementById('existing_cards_preview');
-  if (existingPreviews) existingPreviews.innerHTML = '';
-  
-  new bootstrap.Modal(document.getElementById('contactModal')).show();
+  const cf = document.getElementById('contactForm');
+  if (!cf) { alert('Contact form not available. Please refresh the page.'); return; }
+  cf.reset();
+  const g = id => document.getElementById(id);
+  if (g('contact_id')) g('contact_id').value = '';
+  if (g('contact_existing_cards')) g('contact_existing_cards').value = '';
+  if (g('contact_form_mode')) g('contact_form_mode').value = 'create';
+  if (g('contactModalLabel')) g('contactModalLabel').textContent = 'Add Contact';
+  const np = g('visiting_cards_new_preview'); if (np) np.innerHTML = '';
+  const ep = g('existing_cards_preview'); if (ep) ep.innerHTML = '';
+  const modalEl = g('contactModal');
+  if (modalEl) {
+    new bootstrap.Modal(modalEl).show();
+  } else {
+    alert('Contact modal not found. Please refresh the page.');
+  }
 }
 
 // Global Contact Search inside Modal
