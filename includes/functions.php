@@ -12,7 +12,7 @@ function sanitize(?string $str): string {
 }
 
 function formatCurrency(float $amount): string {
-    return '₹' . ' ' . number_format($amount, 2);
+    return CURRENCY_SYMBOL . ' ' . number_format($amount, 2);
 }
 
 function formatDate(string $date, string $format = 'd M Y'): string {
@@ -138,10 +138,8 @@ function uploadFile(array $file, string $subfolder = 'misc', array $allowed = []
         return null; 
     }
 
-    // Prevent Directory Traversal on subfolder — allow '/' for nested paths like 'leads/cards'
-    $subfolder = preg_replace('/[^a-zA-Z0-9_\-\/]/', '', $subfolder); // allow slash
-    $subfolder = preg_replace('/\/+/', '/', trim($subfolder, '/')); // normalise slashes
-    $subfolder = preg_replace('/\.\./', '', $subfolder);             // block traversal
+    // Prevent Directory Traversal on subfolder
+    $subfolder = preg_replace('/[^a-zA-Z0-9_-]/', '', $subfolder);
     if (empty($subfolder)) $subfolder = 'misc';
 
     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));

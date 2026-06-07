@@ -757,19 +757,7 @@ img, video, svg, canvas, iframe {
   
   /* Form adjustments */
   .form-label { margin-bottom: 4px; }
-  .crm-form-section { padding: 16px; margin-bottom: 12px; }
-  .form-section-title { font-size: 13px; margin-bottom: 14px; }
-
-  /* Page header buttons stack */
-  .page-header .btn-group, .page-header > .btn { width: 100%; }
-
-  /* Line-items summary section */
-  .line-total-section { padding: 14px; }
-  .line-total-row-item.grand-total { font-size: 16px; }
-
-  /* Modal improvements on mobile */
-  .modal-dialog { margin: 0.5rem; }
-  .modal-content { border-radius: 14px; }
+  .crm-form-section { padding: 16px; }
 }
 
 /* 575.98px (Small Mobile) */
@@ -782,150 +770,15 @@ img, video, svg, canvas, iframe {
 /* 425px & 375px & 320px (Extra Small Mobile) */
 @media (max-width: 425px) {
   .topbar { padding: 0 12px; gap: 8px; }
+  .topbar-title { display: none; } /* Hide title on very small screens to save space */
   .btn { width: 100%; margin-bottom: 8px; justify-content: center; }
   .btn:last-child { margin-bottom: 0; }
   .d-grid .btn { margin-bottom: 0; }
+  
   /* Make sure inputs don't overflow */
   input[type="date"], input[type="text"], input[type="email"], input[type="number"], select {
       font-size: 16px; /* Prevents iOS Safari zoom */
   }
-}
-
-/* ============================================================
-   MOBILE FORM — PROFESSIONAL POLISH (all form pages)
-   ============================================================ */
-@media (max-width: 991.98px) {
-
-  /* ── Lead / Edit form two-column layout ── */
-  .lead-edit-topstrip {
-    padding: 10px 14px !important;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  .lead-edit-topstrip h1 {
-    font-size: 15px !important;
-    flex: 1 1 auto;
-  }
-  .lead-edit-topstrip .strip-actions {
-    flex-shrink: 0;
-    gap: 8px;
-  }
-  .lead-edit-topstrip .strip-actions .btn {
-    padding: 8px 14px !important;
-    font-size: 13px !important;
-    width: auto !important;
-    margin-bottom: 0 !important;
-    min-height: 40px;
-  }
-
-  .lead-edit-outer {
-    padding: 12px 12px 80px !important;
-    gap: 12px !important;
-    flex-direction: column !important;
-  }
-  .lead-right-col { width: 100% !important; }
-
-  /* Card sections */
-  .ls-card { margin-bottom: 12px !important; border-radius: 12px !important; }
-  .ls-card-header { padding: 12px 14px !important; }
-  .ls-card-header h6 { font-size: 11px !important; }
-  .ls-card-body { padding: 14px !important; }
-
-  /* Form labels — bigger + easier to read on small screens */
-  .form-label {
-    font-size: 11px !important;
-    letter-spacing: 0.3px !important;
-    margin-bottom: 6px !important;
-    color: #374151 !important;
-  }
-
-  /* Form controls — proper touch targets */
-  .form-control,
-  .form-select {
-    min-height: 46px !important;
-    font-size: 15px !important;   /* Prevents iOS zoom */
-    padding: 10px 12px !important;
-    border-radius: 8px !important;
-  }
-  textarea.form-control { min-height: 80px !important; font-size: 14px !important; }
-
-  /* Input group */
-  .input-group .form-control,
-  .input-group .form-select { min-height: 46px !important; font-size: 15px !important; }
-  .input-group-text { font-size: 14px !important; min-height: 46px !important; }
-
-  /* Contact table → card-style on mobile */
-  .contact-table-wrap { overflow-x: auto; }
-  .contact-table th { font-size: 9px !important; padding: 8px 6px !important; }
-  .contact-table td { padding: 6px !important; }
-  .contact-table .form-control,
-  .contact-table .form-select {
-    min-height: 38px !important;
-    font-size: 13px !important;
-    height: 38px !important;
-  }
-
-  /* Right panel headers */
-  .ls-right-panel-header { font-size: 11px !important; }
-  .ls-right-panel-body { padding: 12px !important; }
-
-  /* Sticky action bar */
-  .ls-sticky-bar {
-    padding: 10px 14px !important;
-    gap: 8px;
-    justify-content: stretch !important;
-  }
-  .ls-sticky-bar .btn {
-    flex: 1 1 auto;
-    min-height: 46px !important;
-    font-size: 14px !important;
-    width: auto !important;
-    margin-bottom: 0 !important;
-  }
-
-  /* CRM form sections (quotes, invoices, orders, customers) */
-  .crm-form-section {
-    padding: 14px !important;
-    border-radius: 12px !important;
-    margin-bottom: 12px !important;
-  }
-  .form-section-title {
-    font-size: 13px !important;
-    margin-bottom: 12px !important;
-    padding-bottom: 8px !important;
-  }
-
-  /* Page header action buttons */
-  .page-header { gap: 10px; }
-  .page-header-left h1 { font-size: 18px !important; }
-  .page-header .btn {
-    min-height: 44px;
-    font-size: 13px;
-    width: auto !important;
-    margin-bottom: 0 !important;
-  }
-
-  /* Line items table */
-  .line-items-wrapper { border-radius: 10px; }
-  .line-items-table th { font-size: 11px; padding: 8px 10px; }
-  .line-items-table td { padding: 6px 8px; }
-
-  /* Totals / summary section */
-  .line-total-section { padding: 14px !important; }
-  .line-total-row-item {
-    padding: 7px 0 !important;
-    font-size: 14px !important;
-    flex-direction: row !important;
-    border-bottom: none !important;
-  }
-  .line-total-row-item.grand-total { font-size: 16px !important; }
-  .line-total-row-item input.form-control {
-    min-height: 40px !important;
-    font-size: 14px !important;
-  }
-
-  /* Breadcrumb */
-  .breadcrumb { font-size: 11px; }
 }
 
 /* ============================================================

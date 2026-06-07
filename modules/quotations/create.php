@@ -116,7 +116,7 @@ include __DIR__ . '/../../includes/header.php';
     <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="<?= BASE_URL ?>/modules/dashboard/index.php">Home</a></li><li class="breadcrumb-item"><a href="<?= BASE_URL ?>/modules/quotations/index.php">Quotations</a></li><li class="breadcrumb-item active">Create</li></ol></nav>
   </div>
   <a href="<?= BASE_URL ?>/modules/quotations/index.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back</a>
-</div><form method="POST" id="quoteForm" data-guard data-autosave>
+</div><form method="POST" id="quoteForm">
   <div class="row g-3">
     <div class="col-lg-8">
       <div class="crm-form-section">

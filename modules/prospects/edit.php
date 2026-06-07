@@ -24,7 +24,15 @@ if (!$lead) {
 }
 
 // Fetch related data
-$stmtCont = db()->prepare("SELECT * FROM lead_contacts WHERE lead_id = ? ORDER BY is_primary DESC, id ASC"); $stmtCont->execute([$id]); $contacts = $stmtCont->fetchAll();
+$stmtCont = db()->prepare("
+  SELECT c.*, cr.role AS relation_role, cr.is_primary
+  FROM contacts c
+  JOIN contact_relations cr ON c.id = cr.contact_id
+  WHERE cr.entity_type = 'lead' AND cr.entity_id = ?
+  ORDER BY cr.is_primary DESC, cr.id ASC
+");
+$stmtCont->execute([$id]);
+$contacts = $stmtCont->fetchAll();
 $stmtAddr = db()->prepare("SELECT * FROM lead_addresses WHERE lead_id = ? ORDER BY is_primary DESC, id ASC"); $stmtAddr->execute([$id]); $addresses = $stmtAddr->fetchAll();
 $stmtProd = db()->prepare("SELECT product_name FROM lead_interested_products WHERE lead_id = ?"); $stmtProd->execute([$id]); $products = $stmtProd->fetchAll(PDO::FETCH_COLUMN);
 $stmtMeet = db()->prepare("SELECT * FROM lead_meetings WHERE lead_id = ? ORDER BY created_at DESC"); $stmtMeet->execute([$id]); $meetings = $stmtMeet->fetchAll();
@@ -561,50 +569,12 @@ include __DIR__ . '/../../includes/header.php';
 
     /* Responsive */
     @media (max-width: 900px) {
-      .lead-edit-outer { flex-direction: column; padding: 12px 12px 80px !important; }
-      .lead-right-col  { width: 100%; }
-    }
+      .lead-edit-outer {
+        flex-direction: column;
+      }
 
-    /* ── Mobile: topstrip compact ── */
-    @media (max-width: 600px) {
-      .lead-edit-topstrip {
-        padding: 10px 12px;
-        flex-wrap: wrap;
-        gap: 8px;
-        align-items: center;
-      }
-      .lead-edit-topstrip h1 {
-        font-size: 14px;
-        flex: 1 1 auto;
-        min-width: 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .lead-edit-topstrip .strip-actions {
-        display: flex;
-        gap: 6px;
-        flex-shrink: 0;
-      }
-      .lead-edit-topstrip .strip-actions .btn {
-        padding: 7px 12px;
-        font-size: 12px;
-        min-height: 38px;
-        width: auto;
-        margin-bottom: 0;
-      }
-      .ls-card-body { padding: 12px; }
-      .ls-card-header h6 { font-size: 10px; }
-      .ls-sticky-bar {
-        padding: 8px 12px;
-        justify-content: stretch;
-      }
-      .ls-sticky-bar .btn {
-        flex: 1 1 auto;
-        min-height: 44px;
-        font-size: 13px;
-        margin-bottom: 0;
-        width: auto;
+      .lead-right-col {
+        width: 100%;
       }
     }
   </style>
@@ -612,7 +582,7 @@ include __DIR__ . '/../../includes/header.php';
   <div class="page-content pb-0">
     <?= flashHtml() ?>
 
-    <form id="lead-edit-form" action="update.php" method="POST" enctype="multipart/form-data" novalidate data-guard data-autosave>
+    <form id="lead-edit-form" action="update.php" method="POST" enctype="multipart/form-data" novalidate>
       <input type="hidden" name="id" value="<?= $id ?>">
 
       <!-- Top strip with title + action buttons -->
@@ -1009,7 +979,9 @@ include __DIR__ . '/../../includes/header.php';
                       <tr class="contact-row <?= $c['is_primary'] ? 'contact-primary-row' : '' ?>"
                         data-contact-index="<?= $idx ?>">
                         <td>
-                          <input type="hidden" class="contact-existing-card-input"
+                          <input type="hidden" name="contacts[<?= $idx ?>][master_contact_id]" value="<?= (int)$c['id'] ?>">
+                          <input type="hidden" name="contacts[<?= $idx ?>][type]" value="<?= e($c['relation_role'] ?? $c['contact_type'] ?? 'Owner') ?>">
+                          <input type="hidden" class="contact-existing-cards-input"
                             name="contacts[<?= $idx ?>][existing_card]" value="<?= e($c['visiting_card']) ?>">
                           <input type="text" name="contacts[<?= $idx ?>][name]" class="form-control contact-name-input"
                             placeholder="Full name" value="<?= e($c['name']) ?>">
@@ -1344,15 +1316,8 @@ include __DIR__ . '/../../includes/header.php';
 <template id="contact-tpl">
   <tr class="contact-row" data-contact-index="">
     <td>
-      <div class="fw-semibold contact-name-display"></div>
-      
-      <!-- Hidden Inputs for all Modal Fields -->
       <input type="hidden" name="" class="contact-id-input">
-      <input type="hidden" name="" class="contact-name-input">
       <input type="hidden" name="" class="contact-contact-type-input">
-      <input type="hidden" name="" class="contact-mobile-input">
-      <input type="hidden" name="" class="contact-whatsapp-input">
-      <input type="hidden" name="" class="contact-email-input">
       <input type="hidden" name="" class="contact-organization-name-input">
       <input type="hidden" name="" class="contact-website-input">
       <input type="hidden" name="" class="contact-address-input">
@@ -1360,17 +1325,20 @@ include __DIR__ . '/../../includes/header.php';
       <input type="hidden" name="" class="contact-state-input">
       <input type="hidden" name="" class="contact-pincode-input">
       <input type="hidden" name="" class="contact-existing-cards-input">
-      
+      <input type="text" name="" class="form-control contact-name-input" placeholder="Full name">
       <div class="contact-file-inputs-container d-none"></div>
     </td>
-    <td class="contact-contact-type-display"></td>
-    <td class="contact-email-display"></td>
-    <td>
-      <div class="contact-mobile-display"></div>
-      <div class="small text-muted contact-whatsapp-display"></div>
-    </td>
+    <td><input type="email" name="" class="form-control contact-email-input" placeholder="email@domain.com"></td>
+    <td><input type="tel" name="" class="form-control contact-mobile-input" placeholder="Mobile"></td>
+    <td><input type="tel" name="" class="form-control contact-whatsapp-input" placeholder="WhatsApp"></td>
     <td class="text-center">
-      <span class="badge bg-secondary contact-cards-count">0 Cards</span>
+      <div class="d-flex align-items-center justify-content-center gap-2">
+        <label class="btn btn-sm btn-outline-primary p-1 px-2 mb-0" style="cursor: pointer;" title="Upload Visiting Card">
+          <i class="bi bi-card-image"></i>
+          <input type="file" name="" class="d-none contact-card-file-input" multiple accept="image/*">
+        </label>
+        <div class="contact-card-previews d-flex gap-1"></div>
+      </div>
     </td>
     <td class="text-center"><input class="form-check-input primary-check" type="checkbox" name="" value="1"></td>
     <td>
@@ -1515,23 +1483,56 @@ function showAddContactModal() {
   document.getElementById('contact_id').value = '';
   document.getElementById('contact_existing_cards').value = '';
   document.getElementById('contact_form_mode').value = 'create';
-  
+
   document.getElementById('contactModalLabel').textContent = 'Add Contact';
-  
+
   // Clear any existing preview cards
   const newPreviews = document.getElementById('visiting_cards_new_preview');
   if (newPreviews) newPreviews.innerHTML = '';
   const existingPreviews = document.getElementById('existing_cards_preview');
   if (existingPreviews) existingPreviews.innerHTML = '';
-  
+
   new bootstrap.Modal(document.getElementById('contactModal')).show();
+}
+
+function addContact(isPrimary = false) {
+  const tpl = document.getElementById('contact-tpl');
+  const clone = tpl.content.cloneNode(true);
+  const row = clone.querySelector('tr');
+  const idx = contactCount;
+
+  row.dataset.contactIndex = idx;
+  row.querySelector('.contact-id-input').name = `contacts[${idx}][master_contact_id]`;
+  row.querySelector('.contact-contact-type-input').name = `contacts[${idx}][type]`;
+  row.querySelector('.contact-contact-type-input').value = 'Owner';
+  row.querySelector('.contact-existing-cards-input').name = `contacts[${idx}][existing_card]`;
+  row.querySelector('.contact-existing-cards-input').value = '[]';
+  row.querySelector('.contact-name-input').name = `contacts[${idx}][name]`;
+  row.querySelector('.contact-email-input').name = `contacts[${idx}][email]`;
+  row.querySelector('.contact-mobile-input').name = `contacts[${idx}][mobile]`;
+  row.querySelector('.contact-whatsapp-input').name = `contacts[${idx}][whatsapp]`;
+  row.querySelector('.contact-card-file-input').name = `contacts[${idx}][card_file][]`;
+  row.querySelector('.contact-card-file-input').setAttribute('onchange', `previewRowContactCard(this, ${idx})`);
+  row.querySelector('.contact-card-previews').id = `contact_card_previews_${idx}`;
+
+  const primaryCheck = row.querySelector('.primary-check');
+  primaryCheck.name = `contacts[${idx}][is_primary]`;
+  if (isPrimary || contactCount === 0) {
+    primaryCheck.checked = true;
+    row.classList.add('contact-primary-row');
+  }
+
+  document.getElementById('contacts-tbody').appendChild(clone);
+  contactCount++;
+  updateContactBadge();
+  updateMeetingWithDropdown();
 }
 
 // Global Contact Search inside Modal
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('contact_search');
     const resultsContainer = document.getElementById('contact_search_results');
-    
+
     if (searchInput && resultsContainer) {
         let debounceTimer;
         searchInput.addEventListener('input', function() {
@@ -1541,7 +1542,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 resultsContainer.style.display = 'none';
                 return;
             }
-            
+
             debounceTimer = setTimeout(() => {
                 fetch('../contacts/search_ajax.php?q=' + encodeURIComponent(val))
                 .then(r => r.json())
@@ -1552,17 +1553,17 @@ document.addEventListener('DOMContentLoaded', function() {
                             const a = document.createElement('a');
                             a.href = '#';
                             a.className = 'list-group-item list-group-item-action py-2';
-                            
+
                             let subtitle = '';
                             if(item.contact.organization_name) subtitle += item.contact.organization_name;
                             if(item.contact.mobile) subtitle += (subtitle ? ' | ' : '') + item.contact.mobile;
-                            
+
                             a.innerHTML = `<div class="d-flex w-100 justify-content-between">
                                 <h6 class="mb-1">${item.contact.name}</h6>
                                 <small style="font-size: 10px;">${item.contact.contact_type || ''}</small>
                             </div>
                             <small class="text-muted" style="font-size: 10px;">${subtitle}</small>`;
-                            
+
                             a.addEventListener('click', function(e) {
                                 e.preventDefault();
                                 document.getElementById('contact_id').value = item.id;
@@ -1577,10 +1578,10 @@ document.addEventListener('DOMContentLoaded', function() {
                                 document.getElementById('contact_city').value = item.contact.city || '';
                                 document.getElementById('contact_state').value = item.contact.state || '';
                                 document.getElementById('contact_pincode').value = item.contact.pincode || '';
-                                
+
                                 resultsContainer.style.display = 'none';
                                 searchInput.value = '';
-                                
+
                                 // Show success feedback
                                 searchInput.placeholder = `Populated: ${item.contact.name}`;
                                 setTimeout(() => searchInput.placeholder = "Type name, mobile, email or organization to search...", 3000);
@@ -1596,7 +1597,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }, 300);
         });
-        
+
         document.addEventListener('click', function(e) {
             if (e.target !== searchInput && e.target !== resultsContainer && !resultsContainer.contains(e.target)) {
                 resultsContainer.style.display = 'none';
@@ -1608,14 +1609,14 @@ document.addEventListener('DOMContentLoaded', function() {
 // Handle Modal Submission for Create/Edit Pages (No AJAX)
 document.getElementById('contactForm').addEventListener('submit', function(e) {
   e.preventDefault();
-  
+
   const tpl = document.getElementById('contact-tpl');
   const clone = tpl.content.cloneNode(true);
   const row = clone.querySelector('tr');
   const idx = contactCount;
-  
+
   row.dataset.contactIndex = idx;
-  
+
   // Is this the first contact? Make it primary
   const isPrimary = (contactCount === 0);
   if (isPrimary) {
@@ -1639,61 +1640,66 @@ document.getElementById('contactForm').addEventListener('submit', function(e) {
   const cCards = document.getElementById('contact_existing_cards').value;
 
   // Set display text
-  row.querySelector('.contact-name-display').textContent = cName;
-  row.querySelector('.contact-contact-type-display').textContent = cType;
-  row.querySelector('.contact-mobile-display').textContent = cMobile;
-  row.querySelector('.contact-whatsapp-display').textContent = cWa ? `WA: ${cWa}` : '';
-  row.querySelector('.contact-email-display').textContent = cEmail || '-';
+  const nameDisplay = row.querySelector('.contact-name-display');
+  if (nameDisplay) nameDisplay.textContent = cName;
+  const typeDisplay = row.querySelector('.contact-contact-type-display');
+  if (typeDisplay) typeDisplay.textContent = cType;
+  const mobileDisplay = row.querySelector('.contact-mobile-display');
+  if (mobileDisplay) mobileDisplay.textContent = cMobile;
+  const whatsappDisplay = row.querySelector('.contact-whatsapp-display');
+  if (whatsappDisplay) whatsappDisplay.textContent = cWa ? `WA: ${cWa}` : '';
+  const emailDisplay = row.querySelector('.contact-email-display');
+  if (emailDisplay) emailDisplay.textContent = cEmail || '-';
 
   // Set hidden inputs
   row.querySelector('.contact-id-input').name = `contacts[${idx}][master_contact_id]`;
   row.querySelector('.contact-id-input').value = cId;
-  
+
   row.querySelector('.contact-name-input').name = `contacts[${idx}][name]`;
   row.querySelector('.contact-name-input').value = cName;
-  
+
   row.querySelector('.contact-contact-type-input').name = `contacts[${idx}][type]`;
   row.querySelector('.contact-contact-type-input').value = cType;
-  
+
   row.querySelector('.contact-mobile-input').name = `contacts[${idx}][mobile]`;
   row.querySelector('.contact-mobile-input').value = cMobile;
-  
+
   row.querySelector('.contact-whatsapp-input').name = `contacts[${idx}][whatsapp]`;
   row.querySelector('.contact-whatsapp-input').value = cWa;
-  
+
   row.querySelector('.contact-email-input').name = `contacts[${idx}][email]`;
   row.querySelector('.contact-email-input').value = cEmail;
-  
+
   row.querySelector('.contact-organization-name-input').name = `contacts[${idx}][organization_name]`;
   row.querySelector('.contact-organization-name-input').value = cOrg;
-  
+
   row.querySelector('.contact-website-input').name = `contacts[${idx}][website]`;
   row.querySelector('.contact-website-input').value = cWeb;
-  
+
   row.querySelector('.contact-address-input').name = `contacts[${idx}][address]`;
   row.querySelector('.contact-address-input').value = cAddr;
-  
+
   row.querySelector('.contact-city-input').name = `contacts[${idx}][city]`;
   row.querySelector('.contact-city-input').value = cCity;
-  
+
   row.querySelector('.contact-state-input').name = `contacts[${idx}][state]`;
   row.querySelector('.contact-state-input').value = cState;
-  
+
   row.querySelector('.contact-pincode-input').name = `contacts[${idx}][pincode]`;
   row.querySelector('.contact-pincode-input').value = cPin;
-  
+
   row.querySelector('.contact-existing-cards-input').name = `contacts[${idx}][existing_card]`;
   row.querySelector('.contact-existing-cards-input').value = cCards;
-  
+
   row.querySelector('.primary-check').name = `contacts[${idx}][is_primary]`;
 
   // Handle files transfer
   const fileInputDevice = document.getElementById('contact_visiting_card_device');
   const fileInputCamera = document.getElementById('contact_visiting_card_camera');
-  
+
   const filesContainer = row.querySelector('.contact-file-inputs-container');
   let totalCards = 0;
-  
+
   if (cCards) {
       try {
           const arr = JSON.parse(cCards);
@@ -1701,7 +1707,7 @@ document.getElementById('contactForm').addEventListener('submit', function(e) {
           else if (typeof cCards === 'string' && cCards.length > 5) totalCards += 1;
       } catch(e) {}
   }
-  
+
   const dt = new DataTransfer();
   if (fileInputDevice.files.length > 0) {
       Array.from(fileInputDevice.files).forEach(f => dt.items.add(f));
@@ -1709,7 +1715,7 @@ document.getElementById('contactForm').addEventListener('submit', function(e) {
   if (fileInputCamera.files.length > 0) {
       Array.from(fileInputCamera.files).forEach(f => dt.items.add(f));
   }
-  
+
   if (dt.files.length > 0) {
       const newFileInput = document.createElement('input');
       newFileInput.type = 'file';
@@ -1719,15 +1725,16 @@ document.getElementById('contactForm').addEventListener('submit', function(e) {
       filesContainer.appendChild(newFileInput);
       totalCards += dt.files.length;
   }
-  
-  row.querySelector('.contact-cards-count').textContent = totalCards + ' Cards';
+
+  const cardsCount = row.querySelector('.contact-cards-count');
+  if (cardsCount) cardsCount.textContent = totalCards + ' Cards';
 
   document.getElementById('contacts-tbody').appendChild(row);
-  
+
   contactCount++;
   updateContactBadge();
   updateMeetingWithDropdown();
-  
+
   // Close Modal
   const modalEl = document.getElementById('contactModal');
   const modal = bootstrap.Modal.getInstance(modalEl);
@@ -1738,6 +1745,29 @@ document.getElementById('contactForm').addEventListener('submit', function(e) {
     btn.closest('tr').remove();
     updateContactBadge();
     updateMeetingWithDropdown();
+  }
+
+  function previewRowContactCard(input, idx) {
+    const container = document.getElementById(`contact_card_previews_${idx}`);
+    if (!container) return;
+
+    container.querySelectorAll('.new-card-preview').forEach(el => el.remove());
+
+    const imgExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+    Array.from(input.files).forEach(f => {
+      const ext = f.name.split('.').pop().toLowerCase();
+      if (!imgExts.includes(ext)) return;
+
+      const reader = new FileReader();
+      reader.onload = e => {
+        const div = document.createElement('div');
+        div.className = 'saved-doc-thumb new-card-preview position-relative';
+        div.style.cssText = 'width: 45px; height: 32px; border-radius: 4px; overflow: hidden;';
+        div.innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;">`;
+        container.appendChild(div);
+      };
+      reader.readAsDataURL(f);
+    });
   }
 
   function removeSavedRowCard(contactIdx, cardIdx, cardPath) {
@@ -1769,6 +1799,7 @@ document.getElementById('contactForm').addEventListener('submit', function(e) {
 
   function updateMeetingWithDropdown() {
     const sel = document.getElementById('meeting-with-contact');
+    if (!sel) return;
     const names = Array.from(document.querySelectorAll('.contact-name-input')).map(i => i.value).filter(Boolean);
     sel.innerHTML = '<option value="">Select Contact Person</option>' +
       names.map(n => `<option value="${n}">${n}</option>`).join('');
@@ -1800,16 +1831,19 @@ document.getElementById('contactForm').addEventListener('submit', function(e) {
 
   // Drag & drop
   const dropZone = document.getElementById('doc-drop-zone');
-  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.borderColor = 'var(--lp)'; });
-  dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = ''; });
-  dropZone.addEventListener('drop', e => {
-    e.preventDefault(); dropZone.style.borderColor = '';
-    const input = document.getElementById('doc-file-input');
-    const dt = new DataTransfer();
-    Array.from(e.dataTransfer.files).forEach(f => dt.items.add(f));
-    input.files = dt.files;
-    previewDocs(input);
-  });
+  if (dropZone) {
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.borderColor = 'var(--lp)'; });
+    dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = ''; });
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault(); dropZone.style.borderColor = '';
+      const input = document.getElementById('doc-file-input');
+      if (!input) return;
+      const dt = new DataTransfer();
+      Array.from(e.dataTransfer.files).forEach(f => dt.items.add(f));
+      input.files = dt.files;
+      previewDocs(input);
+    });
+  }
 
   // Submit
   document.getElementById('lead-edit-form').addEventListener('submit', function () {

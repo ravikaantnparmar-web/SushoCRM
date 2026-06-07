@@ -94,7 +94,7 @@ try {
         'competitor_info'       => $_POST['competitor_info'] ?: null,
         'updated_by'            => $updatedBy
     ];
-    
+
     $params = array_values($newLeadData);
     $params[] = $id;
 
@@ -104,8 +104,9 @@ try {
     db()->prepare("DELETE FROM contact_relations WHERE entity_type = 'lead' AND entity_id = ?")->execute([$id]);
     if (!empty($_POST['contacts'])) {
         $stmtContact = db()->prepare("INSERT INTO contacts (contact_type, name, mobile, whatsapp, email, visiting_card, organization_name, address, city, state, pincode, website) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
+        $stmtContactUpdate = db()->prepare("UPDATE contacts SET contact_type = ?, name = ?, mobile = ?, whatsapp = ?, email = ?, visiting_card = ?, organization_name = ?, address = ?, city = ?, state = ?, pincode = ?, website = ? WHERE id = ?");
         $stmtRelation = db()->prepare("INSERT IGNORE INTO contact_relations (contact_id, entity_type, entity_id, role, is_primary) VALUES (?, 'lead', ?, ?, ?)");
-        
+
         foreach ($_POST['contacts'] as $idx => $c) {
             if (empty($c['name'])) continue;
             // Preserve existing cards + add new ones
@@ -127,10 +128,10 @@ try {
                     }
                 }
             }
-            
+
             // Try to find existing contact
             $existing = false;
-            
+
             if (!empty($c['master_contact_id'])) {
                 $existing = (int)$c['master_contact_id'];
             } else {
@@ -153,6 +154,21 @@ try {
 
             if ($existing) {
                 $contactId = $existing;
+                $stmtContactUpdate->execute([
+                    $c['type'] ?? 'Owner',
+                    $c['name'],
+                    $c['mobile'] ?: null,
+                    $c['whatsapp'] ?: null,
+                    $c['email'] ?: null,
+                    !empty($cardPaths) ? json_encode($cardPaths) : null,
+                    $c['organization_name'] ?? null,
+                    $c['address'] ?? null,
+                    $c['city'] ?? null,
+                    $c['state'] ?? null,
+                    $c['pincode'] ?? null,
+                    $c['website'] ?? null,
+                    $contactId
+                ]);
             } else {
                 $stmtContact->execute([
                     $c['type'] ?? 'Owner', $c['name'],
@@ -183,7 +199,7 @@ try {
         );
         foreach ($_POST['addresses'] as $a) {
             if (empty($a['address_line1']) && empty($a['city']) && empty($a['google_address'])) continue;
-            
+
             $stmtAddr->execute([
                 $id,
                 $a['address_type']    ?: null,
@@ -254,7 +270,7 @@ try {
         foreach ($trackFields as $key => $label) {
             $oldVal = (string)($oldLead[$key] ?? '');
             $newVal = (string)($newLeadData[$key] ?? '');
-            
+
             if ($key === 'estimated_budget' && $oldVal != $newVal) {
                 $oldVal = round((float)$oldVal, 2);
                 $newVal = round((float)$newVal, 2);

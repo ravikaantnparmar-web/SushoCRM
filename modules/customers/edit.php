@@ -116,7 +116,7 @@ include __DIR__ . '/../../includes/header.php';
   <a href="<?= BASE_URL ?>/modules/customers/view.php?id=<?= $id ?>" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Back</a>
 </div>
 <?php if ($errors): ?><div class="alert alert-danger"><ul class="mb-0"><?php foreach($errors as $er) echo '<li>'.e($er).'</li>'; ?></ul></div><?php endif; ?>
-<form method="POST" novalidate data-guard data-autosave>
+<form method="POST" novalidate>
   <?= csrfField() ?>
   <div class="row g-4">
     <div class="col-12 col-lg-8">

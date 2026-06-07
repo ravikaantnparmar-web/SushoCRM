@@ -15,7 +15,7 @@ if ($_SERVER['HTTP_HOST'] === 'localhost' || $_SERVER['HTTP_HOST'] === '127.0.0.
 } else {
     define('BASE_URL', $protocol . '://' . $_SERVER['HTTP_HOST']);
 }
-if (!defined('CURRENCY_SYMBOL')) define('CURRENCY_SYMBOL', '₹');
+define('CURRENCY_SYMBOL', '₹');
 define('CURRENCY_CODE', 'INR');
 define('TAX_NAME', 'GST');
 define('DEFAULT_TAX', 18);

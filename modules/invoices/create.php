@@ -122,7 +122,7 @@ include __DIR__ . '/../../includes/header.php';
   </div>
   <a href="<?= BASE_URL ?>/modules/invoices/index.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back</a>
 </div>
-<form method="POST" id="invoiceForm" data-guard data-autosave>
+<form method="POST" id="invoiceForm">
   <div class="row g-3">
     <div class="col-lg-8">
       <div class="crm-form-section">

@@ -169,7 +169,7 @@ include __DIR__ . '/../../includes/header.php';
   <div class="alert alert-danger"><ul class="mb-0"><?php foreach($errors as $e) echo '<li>'.htmlspecialchars($e).'</li>'; ?></ul></div>
 <?php endif; ?>
 
-<form method="POST" novalidate data-guard data-autosave>
+<form method="POST" novalidate>
   <?= csrfField() ?>
   <input type="hidden" name="source_lead_id" value="<?= e($sourceLeadId ?? '') ?>">
   <div class="row g-4">
@@ -295,7 +295,7 @@ include __DIR__ . '/../../includes/header.php';
           </select>
         </div>
         <div class="mb-3">
-          <label class="form-label">Credit Limit (&#8377;)</label>
+          <label class="form-label">Credit Limit (<?= CURRENCY_SYMBOL ?>)</label>
           <input type="number" name="credit_limit" class="form-control" min="0" step="0.01" value="<?= e($_POST['credit_limit']??'0') ?>">
         </div>
       </div>

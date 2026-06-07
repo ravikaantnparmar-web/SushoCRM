@@ -19,12 +19,7 @@ function currentUser(): ?array {
     if ($user === null) {
         $stmt = db()->prepare("SELECT u.*, r.name AS role_name, r.slug AS role_slug, r.permissions FROM users u JOIN roles r ON u.role_id = r.id WHERE u.id = ?");
         $stmt->execute([$_SESSION['user_id']]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($result === false) {
-            logoutUser(); // Ghost session detected
-            return null;
-        }
-        $user = $result;
+        $user = $stmt->fetch();
     }
     return $user;
 }
