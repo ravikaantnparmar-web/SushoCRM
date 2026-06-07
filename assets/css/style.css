@@ -492,7 +492,10 @@ img, video, svg, canvas, iframe {
 }
 /* Touch targets optimization */
 @media (max-width: 768px) {
-    .form-control, .form-select { min-height: 44px; }
+    .form-control, .form-select, textarea { 
+        min-height: 48px; 
+        font-size: 16px !important; /* Prevents iOS Safari zoom */
+    }
 }
 
 .form-control:focus, .form-select:focus {
@@ -520,8 +523,8 @@ img, video, svg, canvas, iframe {
   white-space: nowrap;
 }
 @media (max-width: 768px) {
-    .btn { min-height: 44px; }
-    .btn-sm { min-height: 36px; }
+    .btn { min-height: 48px; font-size: 15px; }
+    .btn-sm { min-height: 40px; font-size: 14px; }
 }
 .btn-primary   { background: var(--primary);  border-color: var(--primary); color: #fff; }
 .btn-primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); color: #fff; }
@@ -756,8 +759,14 @@ img, video, svg, canvas, iframe {
   .line-total-row-item span:last-child { font-weight: 600; margin-top: 4px; }
   
   /* Form adjustments */
-  .form-label { margin-bottom: 4px; }
-  .crm-form-section { padding: 16px; }
+  .form-label { margin-bottom: 6px; font-size: 14px; }
+  .crm-form-section { padding: 16px; overflow-x: hidden; }
+  
+  /* Make all form fields block level on mobile for better usability */
+  .row.g-3 > [class^="col-"] {
+      width: 100%;
+      margin-top: 12px;
+  }
 }
 
 /* 575.98px (Small Mobile) */
@@ -776,8 +785,8 @@ img, video, svg, canvas, iframe {
   .d-grid .btn { margin-bottom: 0; }
   
   /* Make sure inputs don't overflow */
-  input[type="date"], input[type="text"], input[type="email"], input[type="number"], select {
-      font-size: 16px; /* Prevents iOS Safari zoom */
+  .form-control, .form-select {
+      font-size: 16px !important; /* Prevents iOS Safari zoom */
   }
 }
 
