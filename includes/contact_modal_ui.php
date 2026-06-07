@@ -31,7 +31,9 @@
             <div class="col-md-6">
               <label class="form-label fw-semibold">Contact Type <span class="text-danger">*</span></label>
               <select name="contact_type" id="contact_contact_type" class="form-select" required>
-                <?php foreach($contactTypes as $type): ?>
+                <?php 
+                $safeContactTypes = isset($contactTypes) && is_array($contactTypes) ? $contactTypes : ['Owner','Partner','Manager','Executive','Architect','Contractor','Dealer','Other'];
+                foreach($safeContactTypes as $type): ?>
                   <option value="<?= e($type) ?>"><?= e($type) ?></option>
                 <?php endforeach; ?>
               </select>
