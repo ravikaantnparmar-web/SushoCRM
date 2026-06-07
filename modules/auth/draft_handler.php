@@ -24,7 +24,7 @@ $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 // ── LOAD ─────────────────────────────────────────────────────────────────────
 if ($action === 'load') {
-    $draftKey = sanitize($_GET['key'] ?? '');
+    $draftKey = trim($_GET['key'] ?? '');
     if (!$draftKey) { echo json_encode(['draft' => null]); exit; }
 
     $stmt = db()->prepare(
@@ -48,9 +48,9 @@ if ($action === 'load') {
 
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 if ($action === 'save' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    $draftKey  = sanitize($_POST['key'] ?? '');
+    $draftKey  = trim($_POST['key'] ?? '');
     $draftData = $_POST['data'] ?? '';
-    $formTitle = sanitize($_POST['form_title'] ?? '');
+    $formTitle = trim($_POST['form_title'] ?? '');
 
     if (!$draftKey || !$draftData) {
         echo json_encode(['error' => 'Missing key or data']);
@@ -85,7 +85,7 @@ if ($action === 'save' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // ── DELETE ────────────────────────────────────────────────────────────────────
 if ($action === 'delete') {
-    $draftKey = sanitize($_GET['key'] ?? $_POST['key'] ?? '');
+    $draftKey = trim($_GET['key'] ?? $_POST['key'] ?? '');
     if (!$draftKey) { echo json_encode(['deleted' => false]); exit; }
 
     $stmt = db()->prepare(
