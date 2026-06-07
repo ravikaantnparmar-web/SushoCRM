@@ -32,6 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             
             $sqlDump = "-- SushobhaCRM Database Backup\n";
             $sqlDump .= "-- Generated: " . date('Y-m-d H:i:s') . "\n\n";
+            $sqlDump .= "SET FOREIGN_KEY_CHECKS=0;\n\n";
             
             foreach ($tables as $table) {
                 $res = $db->query("SHOW CREATE TABLE `$table`")->fetch(PDO::FETCH_NUM);
@@ -48,6 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 }
                 $sqlDump .= "\n\n";
             }
+            $sqlDump .= "SET FOREIGN_KEY_CHECKS=1;\n";
             
             file_put_contents($filePath, $sqlDump);
             logActivity('settings', 'backup', "Database backup created: $filename");
@@ -62,7 +64,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         if (file_exists($filePath)) {
             try {
                 $sql = file_get_contents($filePath);
+                $db->exec("SET FOREIGN_KEY_CHECKS=0;");
                 $db->exec($sql);
+                $db->exec("SET FOREIGN_KEY_CHECKS=1;");
                 logActivity('settings', 'restore', "Database restored from: $file");
                 setFlash('success', 'Database restored successfully from ' . $file);
             } catch (Exception $e) {
@@ -143,7 +147,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     if (file_exists($sqlFile)) {
                         try {
                             $sql = file_get_contents($sqlFile);
+                            $db->exec("SET FOREIGN_KEY_CHECKS=0;");
                             $db->exec($sql);
+                            $db->exec("SET FOREIGN_KEY_CHECKS=1;");
                             @unlink($sqlFile);
                             @unlink($rootPath . '/install.php');
                             logActivity('settings', 'restore', "Full system restored from: $file");
@@ -173,6 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             while ($row = $result->fetch(PDO::FETCH_NUM)) $tables[] = $row[0];
             
             $sqlDump = "-- Full System Backup - Unified Installer\n-- Generated: " . date('Y-m-d H:i:s') . "\n\n";
+            $sqlDump .= "SET FOREIGN_KEY_CHECKS=0;\n\n";
             foreach ($tables as $table) {
                 $res = $db->query("SHOW CREATE TABLE `$table`")->fetch(PDO::FETCH_NUM);
                 $sqlDump .= "DROP TABLE IF EXISTS `$table`;\n" . $res[1] . ";\n\n";
@@ -184,6 +191,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 }
                 $sqlDump .= "\n\n";
             }
+            $sqlDump .= "SET FOREIGN_KEY_CHECKS=1;\n";
 
             // 2. Generate Installer Script
             $installerScript = <<<'INSTALLER'
@@ -211,7 +219,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Import SQL Dump
         if (file_exists(__DIR__ . '/database.sql')) {
             $sql = file_get_contents(__DIR__ . '/database.sql');
+            $pdo->exec("SET FOREIGN_KEY_CHECKS=0;");
             $pdo->exec($sql);
+            $pdo->exec("SET FOREIGN_KEY_CHECKS=1;");
         } else {
             throw new Exception("database.sql not found! Ensure all files were extracted properly.");
         }
