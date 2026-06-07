@@ -578,8 +578,6 @@ include __DIR__ . '/../../includes/header.php';
       </div>
     </div>
   </div><!-- /.page-content -->
-</div><!-- /.main-content -->
-</div><!-- /.app-wrapper -->
 
 <?php if ($showAnnouncements): ?>
 <!-- Communication Board Modal -->
@@ -694,22 +692,20 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <?php endif; ?>
 
-<!-- Charts Init -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/main.js?v=<?= time() ?>"></script>
+<?php
+$extraScripts = '
 <script>
 // Revenue Bar Chart
-const rCtx = document.getElementById('revenueChart').getContext('2d');
+const rCtx = document.getElementById("revenueChart").getContext("2d");
 new Chart(rCtx, {
-  type: 'bar',
+  type: "bar",
   data: {
-    labels: <?= $chartLabels ?>,
+    labels: ' . $chartLabels . ',
     datasets: [{
-      label: 'Revenue (₹)',
-      data: <?= $chartRevenue ?>,
-      backgroundColor: 'rgba(79, 70, 229, 0.12)',
-      borderColor: '#4f46e5',
+      label: "Revenue (₹)",
+      data: ' . $chartRevenue . ',
+      backgroundColor: "rgba(79, 70, 229, 0.12)",
+      borderColor: "#4f46e5",
       borderWidth: 2,
       borderRadius: 6,
     }]
@@ -718,33 +714,36 @@ new Chart(rCtx, {
     responsive: true, maintainAspectRatio: false,
     plugins: { legend: { display: false } },
     scales: {
-      y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.05)' },
-           ticks: { callback: v => '₹' + (v >= 100000 ? (v/100000)+'L' : (v >= 1000 ? (v/1000)+'k' : v)) } },
+      y: { beginAtZero: true, grid: { color: "rgba(0,0,0,.05)" },
+           ticks: { callback: v => "₹" + (v >= 100000 ? (v/100000)+"L" : (v >= 1000 ? (v/1000)+"k" : v)) } },
       x: { grid: { display: false } }
     }
   }
 });
 
 // Expense Doughnut Chart
-const eCtx = document.getElementById('expenseChart').getContext('2d');
+const eCtx = document.getElementById("expenseChart").getContext("2d");
 new Chart(eCtx, {
-  type: 'doughnut',
+  type: "doughnut",
   data: {
-    labels: <?= $expLabels ?>,
+    labels: ' . $expLabels . ',
     datasets: [{
-      data: <?= $expData ?>,
-      backgroundColor: ['#4f46e5','#10b981','#f59e0b','#ef4444','#06b6d4','#8b5cf6'],
+      data: ' . $expData . ',
+      backgroundColor: ["#4f46e5","#10b981","#f59e0b","#ef4444","#06b6d4","#8b5cf6"],
       borderWidth: 0,
     }]
   },
   options: {
     responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } } },
-    cutout: '65%'
+    plugins: { legend: { position: "bottom", labels: { boxWidth: 10, font: { size: 11 } } } },
+    cutout: "65%"
   }
 });
 
 // Sidebar overlay
-document.getElementById('sidebarOverlay')?.addEventListener('click', closeSidebar);
+document.getElementById("sidebarOverlay")?.addEventListener("click", closeSidebar);
 </script>
-</body></html>
+';
+
+include __DIR__ . '/../../includes/footer.php';
+?>

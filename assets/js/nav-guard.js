@@ -109,6 +109,9 @@
         const current = serializeForm(form);
         if (current !== form.dataset.snapshot) {
           dirtyForms.add(form);
+          if (isMobile() && typeof window.navGuardApplyTrap === 'function') {
+            window.navGuardApplyTrap();
+          }
         } else {
           dirtyForms.delete(form);
         }
@@ -199,6 +202,13 @@
   }
 
   // ── D. MOBILE BACK-BUTTON GUARD ────────────────────────────────────────────
+  let trapApplied = false;
+
+  function isDashboardPage() {
+    const pathname = window.location.pathname;
+    return pathname.includes('/modules/dashboard/index.php') || pathname.endsWith('/modules/dashboard/');
+  }
+
   function injectBackConfirmModal() {
     if (document.getElementById('navGuardBackModal')) return;
     const modal = document.createElement('div');
@@ -211,7 +221,7 @@
                 <div style="width:38px;height:38px;background:#fef2f2;border-radius:10px;display:flex;align-items:center;justify-content:center;">
                   <i class="bi bi-box-arrow-left text-danger fs-5"></i>
                 </div>
-                <h5 class="modal-title fw-bold">Exit Application?</h5>
+                <h5 class="modal-title fw-bold" id="navGuardBackModalTitle">Exit Application?</h5>
               </div>
               <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -226,55 +236,91 @@
         </div>
       </div>`;
     document.body.appendChild(modal.firstElementChild);
-
-    document.getElementById('navGuardBackConfirmBtn').addEventListener('click', function() {
-      // Allow navigation to proceed
-      window.navGuardAllowBack = true;
-      history.back();
-      const m = bootstrap.Modal.getInstance(document.getElementById('navGuardBackModal'));
-      if (m) m.hide();
-    });
   }
 
   function initMobileBackGuard() {
     injectBackConfirmModal();
 
-    // Aggressive back-button trap using hash modification
-    // This bypasses mobile browser restrictions that block pushState if there is no user gesture
     const trapHash = '#_guard';
 
     const applyTrap = () => {
       if (window.location.hash !== trapHash) {
-        // Replace current state so we have a clean base, then push the trap
         history.replaceState({ base: true }, '', window.location.pathname + window.location.search);
         history.pushState({ navGuard: true }, '', trapHash);
+        trapApplied = true;
       }
     };
 
-    // Apply trap immediately on page load
-    applyTrap();
+    const isDash = isDashboardPage();
 
-    // Also re-apply on interaction just to be absolutely certain
-    document.addEventListener('touchstart', applyTrap, { once: true, passive: true });
-    document.addEventListener('click', applyTrap, { once: true, passive: true });
+    // Only apply trap immediately on page load if it's the dashboard
+    if (isDash) {
+      applyTrap();
+      // Re-apply on interaction to ensure it traps on dashboard
+      document.addEventListener('touchstart', applyTrap, { once: true, passive: true });
+      document.addEventListener('click', applyTrap, { once: true, passive: true });
+    }
+
+    // Expose applyTrap globally
+    window.navGuardApplyTrap = applyTrap;
 
     window.addEventListener('popstate', function(e) {
-      if (formSubmitting || window.navGuardAllowBack) return;
+      if (formSubmitting) return;
 
-      // If they pressed back, the hash was removed. We must immediately put it back to maintain the trap.
-      if (window.location.hash !== trapHash) {
-        history.pushState({ navGuard: true }, '', trapHash);
+      const dirty = isDirty();
+
+      // If it's not dashboard and not dirty, we don't want to trap.
+      if (!isDash && !dirty) {
+        if (trapApplied && window.location.hash !== trapHash) {
+          trapApplied = false; // Reset
+          history.back(); // Programmatically execute back transition
+        }
+        return;
       }
 
-      const msg = document.getElementById('backModalMsg');
-      if (isDirty()) {
-        msg.innerHTML = '<span class="text-danger fw-semibold"><i class="bi bi-exclamation-triangle me-1"></i>You have unsaved changes!</span><br>Are you sure you want to leave without saving?';
+      // We are trapping: show confirmation modal
+      const titleEl = document.getElementById('navGuardBackModalTitle');
+      const msgEl = document.getElementById('backModalMsg');
+      const confirmBtn = document.getElementById('navGuardBackConfirmBtn');
+
+      if (isDash) {
+        if (titleEl) titleEl.textContent = 'Exit Application?';
+        if (msgEl) msgEl.textContent = 'Are you sure you want to exit the application?';
+        if (confirmBtn) {
+          confirmBtn.textContent = 'Yes, Exit';
+          confirmBtn.className = 'btn btn-danger btn-sm fw-semibold';
+          confirmBtn.onclick = function() {
+            const m = bootstrap.Modal.getInstance(document.getElementById('navGuardBackModal'));
+            if (m) m.hide();
+            window.location.href = BASE_URL + '/modules/auth/logout.php';
+          };
+        }
       } else {
-        msg.innerHTML = 'Are you sure you want to go back?';
+        if (titleEl) titleEl.textContent = 'Discard Changes?';
+        if (msgEl) {
+          msgEl.innerHTML = '<span class="text-danger fw-semibold"><i class="bi bi-exclamation-triangle me-1"></i>You have unsaved changes!</span><br>Are you sure you want to leave without saving?';
+        }
+        if (confirmBtn) {
+          confirmBtn.textContent = 'Discard & Leave';
+          confirmBtn.className = 'btn btn-danger btn-sm fw-semibold';
+          confirmBtn.onclick = function() {
+            const m = bootstrap.Modal.getInstance(document.getElementById('navGuardBackModal'));
+            if (m) m.hide();
+            history.back();
+          };
+        }
       }
 
       const modal = new bootstrap.Modal(document.getElementById('navGuardBackModal'));
       modal.show();
+
+      // Re-trap if they cancel/dismiss the modal
+      const handleCancel = () => {
+        applyTrap();
+        modalEl.removeEventListener('hidden.bs.modal', handleCancel);
+      };
+      const modalEl = document.getElementById('navGuardBackModal');
+      modalEl.addEventListener('hidden.bs.modal', handleCancel);
     });
   }
 
