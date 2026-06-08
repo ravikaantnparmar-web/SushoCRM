@@ -853,6 +853,12 @@ document.getElementById('addressForm').addEventListener('submit', function(e) {
     const url = id ? 'update_address_ajax.php' : 'add_address_ajax.php';
     const formData = new FormData(this);
 
+    // ── Force-set lead_id from URL param (guaranteed correct source) ──────
+    const urlLeadId = new URLSearchParams(window.location.search).get('id');
+    if (urlLeadId && parseInt(urlLeadId) > 0) {
+        formData.set('lead_id', urlLeadId);
+    }
+
     fetch(url, {
         method: 'POST',
         body: formData
@@ -1008,6 +1014,12 @@ document.getElementById('contactForm').addEventListener('submit', function(e) {
     // Temporarily re-enable all fields to grab their values for formData, in case they were disabled by link mode
     Array.from(this.elements).forEach(el => { el.disabled = false; });
     const formData = new FormData(this);
+
+    // ── Force-set lead_id from URL param (guaranteed correct source) ──────
+    const urlLeadId = new URLSearchParams(window.location.search).get('id');
+    if (urlLeadId && parseInt(urlLeadId) > 0) {
+        formData.set('lead_id', urlLeadId);
+    }
 
     fetch(url, {
         method: 'POST',
@@ -1226,6 +1238,12 @@ document.getElementById('documentForm').addEventListener('submit', function(e) {
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
 
     const formData = new FormData(this);
+
+    // ── Force-set id from URL param (document form uses 'id' instead of 'lead_id') ──────
+    const urlLeadId = new URLSearchParams(window.location.search).get('id');
+    if (urlLeadId && parseInt(urlLeadId) > 0) {
+        formData.set('id', urlLeadId);
+    }
 
     fetch('save_docs_ajax.php', {
         method: 'POST',
