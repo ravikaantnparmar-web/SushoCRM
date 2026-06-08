@@ -10,6 +10,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: index.php'); exit;
 }
 
+// Detect post_max_size overflow (PHP clears $_POST and $_FILES if total uploaded size exceeds server limits)
+if (empty($_POST) && empty($_FILES) && isset($_SERVER['CONTENT_LENGTH']) && $_SERVER['CONTENT_LENGTH'] > 0) {
+    $_SESSION['flash_error'] = "File too large. The total upload size exceeds the server's limit. Please try smaller files.";
+    header('Location: create.php');
+    exit;
+}
+
 try {
     db()->beginTransaction();
     $createdBy = $_SESSION['user_id'];
@@ -186,6 +193,35 @@ try {
                 $stmtProd->execute([$leadId, trim($prod)]);
             }
         }
+    }
+
+    // ── Document Uploads ───────────────────────────────
+    $allFiles = [];
+    if (!empty($_FILES['documents']['name'][0])) {
+        foreach ($_FILES['documents']['name'] as $k => $name) {
+            $allFiles[] = ['name'=>$name,'type'=>$_FILES['documents']['type'][$k],'tmp_name'=>$_FILES['documents']['tmp_name'][$k],'error'=>$_FILES['documents']['error'][$k],'size'=>$_FILES['documents']['size'][$k],'source'=>'Device'];
+        }
+    }
+    if (!empty($_FILES['camera_photos']['name'][0])) {
+        foreach ($_FILES['camera_photos']['name'] as $k => $name) {
+            $allFiles[] = ['name'=>$name,'type'=>$_FILES['camera_photos']['type'][$k],'tmp_name'=>$_FILES['camera_photos']['tmp_name'][$k],'error'=>$_FILES['camera_photos']['error'][$k],'size'=>$_FILES['camera_photos']['size'][$k],'source'=>'Mobile'];
+        }
+    }
+    if (!empty($_FILES['camera_photos_2']['name'][0])) {
+        foreach ($_FILES['camera_photos_2']['name'] as $k => $name) {
+            $allFiles[] = ['name'=>$name,'type'=>$_FILES['camera_photos_2']['type'][$k],'tmp_name'=>$_FILES['camera_photos_2']['tmp_name'][$k],'error'=>$_FILES['camera_photos_2']['error'][$k],'size'=>$_FILES['camera_photos_2']['size'][$k],'source'=>'Mobile'];
+        }
+    }
+    $stmtDoc = db()->prepare("INSERT INTO lead_documents (lead_id, file_path, file_name, file_type, category, remark, uploaded_from, uploaded_by) VALUES (?,?,?,?,?,?,?,?)");
+    foreach ($allFiles as $fd) {
+        $path = uploadFile($fd, 'leads');
+        if ($path) $stmtDoc->execute([$leadId, $path, $fd['name'], $fd['type'], 'Site Media', $_POST['upload_remark'] ?? null, $fd['source'], $createdBy]);
+    }
+
+    // ── Initial Meeting ────────────────────────────────────────
+    if (!empty($_POST['meeting_type']) && (!empty($_POST['meeting_purpose']) || !empty($_POST['meeting_with_name']) || !empty($_POST['meeting_followup_date']))) {
+        db()->prepare("INSERT INTO lead_meetings (lead_id, meeting_with, type, purpose, status, sales_stage, followup_date, created_by) VALUES (?,?,?,?,?,?,?,?)")
+           ->execute([$leadId, $_POST['meeting_with_name'] ?? null, $_POST['meeting_type'], $_POST['meeting_purpose'] ?? null, $_POST['meeting_status'] ?? 'Scheduled', $_POST['sales_stage'] ?: null, $_POST['meeting_followup_date'] ?: null, $createdBy]);
     }
 
     db()->prepare("INSERT INTO lead_timeline (lead_id, action_type, description, user_id) VALUES (?, ?, ?, ?)")
