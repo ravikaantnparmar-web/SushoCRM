@@ -15,7 +15,7 @@ if ($_SERVER['HTTP_HOST'] === 'localhost' || $_SERVER['HTTP_HOST'] === '127.0.0.
 } else {
     define('BASE_URL', $protocol . '://' . $_SERVER['HTTP_HOST']);
 }
-define('CURRENCY_SYMBOL', "\u20B9"); // Indian Rupee ₹ (Unicode U+20B9)
+define('CURRENCY_SYMBOL', "\u{20B9}"); // Indian Rupee ₹ (U+20B9, PHP 7+ Unicode escape)
 define('CURRENCY_CODE', 'INR');
 define('TAX_NAME', 'GST');
 define('DEFAULT_TAX', 18);
