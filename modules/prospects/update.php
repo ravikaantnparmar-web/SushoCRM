@@ -7,8 +7,21 @@ require_once __DIR__ . '/../../includes/functions.php';
 require_once __DIR__ . '/constants.php';
 requireLogin();
 requirePermission('prospects', 'edit');
-$id = (int)($_POST['id'] ?? 0);
-if ($id <= 0) { header('Location: index.php'); exit; }
+
+    // Detect post_max_size overflow (PHP clears $_POST and $_FILES if total uploaded size exceeds server limits)
+    if (empty($_POST) && empty($_FILES) && isset($_SERVER['CONTENT_LENGTH']) && $_SERVER['CONTENT_LENGTH'] > 0) {
+        $referer = $_SERVER['HTTP_REFERER'] ?? 'index.php';
+        $_SESSION['flash_error'] = "File too large. The total upload size exceeds the server's limit. Please try smaller files.";
+        header("Location: $referer");
+        exit;
+    }
+
+    $id = (int)($_POST['id'] ?? 0);
+    if ($id <= 0) {
+        $_SESSION['flash_error'] = "Invalid form submission or missing Lead ID.";
+        header('Location: index.php');
+        exit;
+    }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header("Location: edit.php?id=$id"); exit;
@@ -155,6 +168,11 @@ try {
             $allFiles[] = ['name'=>$name,'type'=>$_FILES['camera_photos']['type'][$k],'tmp_name'=>$_FILES['camera_photos']['tmp_name'][$k],'error'=>$_FILES['camera_photos']['error'][$k],'size'=>$_FILES['camera_photos']['size'][$k],'source'=>'Mobile'];
         }
     }
+    if (!empty($_FILES['camera_photos_2']['name'][0])) {
+        foreach ($_FILES['camera_photos_2']['name'] as $k => $name) {
+            $allFiles[] = ['name'=>$name,'type'=>$_FILES['camera_photos_2']['type'][$k],'tmp_name'=>$_FILES['camera_photos_2']['tmp_name'][$k],'error'=>$_FILES['camera_photos_2']['error'][$k],'size'=>$_FILES['camera_photos_2']['size'][$k],'source'=>'Mobile'];
+        }
+    }
     $stmtDoc = db()->prepare("INSERT INTO lead_documents (lead_id, file_path, file_name, file_type, category, remark, uploaded_from, uploaded_by) VALUES (?,?,?,?,?,?,?,?)");
     foreach ($allFiles as $fd) {
         $path = uploadFile($fd, 'leads');
@@ -162,9 +180,9 @@ try {
     }
 
     // ── 5. New Meeting ────────────────────────────────────────
-    if (!empty($_POST['meeting_with_name'])) {
+    if (!empty($_POST['meeting_type']) && (!empty($_POST['meeting_purpose']) || !empty($_POST['meeting_with_name']) || !empty($_POST['meeting_followup_date']))) {
         db()->prepare("INSERT INTO lead_meetings (lead_id, meeting_with, type, purpose, status, sales_stage, followup_date, created_by) VALUES (?,?,?,?,?,?,?,?)")
-           ->execute([$id, $_POST['meeting_with_name'], $_POST['meeting_type'] ?? 'Site Visit', $_POST['meeting_purpose'] ?? null, $_POST['meeting_status'] ?? 'Scheduled', $_POST['sales_stage'] ?: null, $_POST['meeting_followup_date'] ?: null, $updatedBy]);
+           ->execute([$id, $_POST['meeting_with_name'] ?? null, $_POST['meeting_type'], $_POST['meeting_purpose'] ?? null, $_POST['meeting_status'] ?? 'Scheduled', $_POST['sales_stage'] ?: null, $_POST['meeting_followup_date'] ?: null, $updatedBy]);
     }
 
     // ── 6. Timeline ───────────────────────────────────────────
