@@ -1127,6 +1127,12 @@ document.getElementById('meetingForm').addEventListener('submit', function(e) {
     const url = id ? 'update_meeting_ajax.php' : 'add_meeting_ajax.php';
     const formData = new FormData(this);
 
+    // ── Force-set lead_id from URL param (guaranteed correct source) ──────
+    const urlLeadId = new URLSearchParams(window.location.search).get('id');
+    if (urlLeadId && parseInt(urlLeadId) > 0) {
+        formData.set('lead_id', urlLeadId);
+    }
+
     fetch(url, {
         method: 'POST',
         body: formData
