@@ -18,6 +18,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $followupDate = sanitize($_POST['actual_followup_date'] ?? '') ?: null;
         $createdBy    = $_SESSION['user_id'] ?? $_SESSION['id'] ?? null;
 
+        // ── Validate lead_id ──────────────────────────────────────────
+        if ($leadId <= 0) {
+            http_response_code(400);
+            echo json_encode(['status' => 'error', 'message' => 'Invalid lead ID. Please refresh the page and try again.']);
+            exit;
+        }
+
+        // Verify lead actually exists and is not deleted
+        $leadCheck = db()->prepare("SELECT id FROM leads WHERE id = ? AND deleted_at IS NULL");
+        $leadCheck->execute([$leadId]);
+        if (!$leadCheck->fetch()) {
+            http_response_code(400);
+            echo json_encode(['status' => 'error', 'message' => 'Lead not found or has been deleted. Please refresh the page.']);
+            exit;
+        }
+
         // 1. Insert Meeting Record
         $sqlMeeting = "INSERT INTO lead_meetings 
             (lead_id, meeting_with, type, purpose, status, sales_stage, followup_date, created_by) 
@@ -26,6 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $leadId, $meetingWith, $type, $purpose,
             $meetingStatus, $salesStage, $followupDate, $createdBy
         ]);
+
 
         // 2. Update Master Lead Record (lead status + followup date)
         $updateFields = [];

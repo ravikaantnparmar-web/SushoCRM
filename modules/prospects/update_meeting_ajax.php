@@ -29,44 +29,55 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $updateFields = [];
             $updateParams = [];
             
-            if ($leadStatus) {
-                $updateFields[] = 'lead_status = ?';
-                $updateParams[] = $leadStatus;
-            }
-            if ($followup_date) {
-                $updateFields[] = 'actual_followup_date = ?';
-                $updateParams[] = $followup_date;
-            }
-            if ($salesStage) {
-                $updateFields[] = 'sales_stage = ?';
-                $updateParams[] = $salesStage;
-            }
+            // Verify lead exists before updating it
+            $leadCheck = db()->prepare("SELECT id FROM leads WHERE id = ? AND deleted_at IS NULL");
+            $leadCheck->execute([$lead_id]);
+            $leadExists = (bool)$leadCheck->fetch();
             
-            if (!empty($updateFields)) {
-                $sqlLead = "UPDATE leads SET " . implode(', ', $updateFields) . " WHERE id = ?";
-                try {
-                    db()->prepare($sqlLead)->execute([...$updateParams, $lead_id]);
-                } catch (Exception $e) {
-                    $idx = array_search('sales_stage = ?', $updateFields);
-                    if ($idx !== false) {
-                        unset($updateFields[$idx]);
-                        unset($updateParams[$idx]);
-                        if (!empty($updateFields)) {
-                            $sqlLead2 = "UPDATE leads SET " . implode(', ', $updateFields) . " WHERE id = ?";
-                            db()->prepare($sqlLead2)->execute([...array_values($updateParams), $lead_id]);
+            if ($leadExists) {
+                if ($leadStatus) {
+                    $updateFields[] = 'lead_status = ?';
+                    $updateParams[] = $leadStatus;
+                }
+                if ($followup_date) {
+                    $updateFields[] = 'actual_followup_date = ?';
+                    $updateParams[] = $followup_date;
+                }
+                if ($salesStage) {
+                    $updateFields[] = 'sales_stage = ?';
+                    $updateParams[] = $salesStage;
+                }
+                
+                if (!empty($updateFields)) {
+                    $sqlLead = "UPDATE leads SET " . implode(', ', $updateFields) . " WHERE id = ?";
+                    try {
+                        db()->prepare($sqlLead)->execute([...$updateParams, $lead_id]);
+                    } catch (Exception $e) {
+                        $idx = array_search('sales_stage = ?', $updateFields);
+                        if ($idx !== false) {
+                            unset($updateFields[$idx]);
+                            unset($updateParams[$idx]);
+                            if (!empty($updateFields)) {
+                                $sqlLead2 = "UPDATE leads SET " . implode(', ', $updateFields) . " WHERE id = ?";
+                                db()->prepare($sqlLead2)->execute([...array_values($updateParams), $lead_id]);
+                            }
+                        } else {
+                            throw $e;
                         }
-                    } else {
-                        throw $e;
                     }
                 }
-            }
-            
-            // Add Timeline Entry if lead status changed via edit
-            if ($leadStatus) {
-                $desc = "Meeting updated ($type). Status updated to: $leadStatus";
-                $createdBy = $_SESSION['user_id'] ?? $_SESSION['id'] ?? null;
-                db()->prepare("INSERT INTO lead_timeline (lead_id, action_type, description, user_id) VALUES (?, 'Update', ?, ?)")
-                  ->execute([$lead_id, $desc, $createdBy]);
+                
+                // Add Timeline Entry if lead status changed via edit
+                if ($leadStatus) {
+                    try {
+                        $desc = "Meeting updated ($type). Status updated to: $leadStatus";
+                        $createdBy = $_SESSION['user_id'] ?? $_SESSION['id'] ?? null;
+                        db()->prepare("INSERT INTO lead_timeline (lead_id, action_type, description, user_id) VALUES (?, 'Update', ?, ?)")
+                          ->execute([$lead_id, $desc, $createdBy]);
+                    } catch (Exception $e) {
+                        // Non-fatal: timeline logging failure should not block the meeting update
+                    }
+                }
             }
         }
 
