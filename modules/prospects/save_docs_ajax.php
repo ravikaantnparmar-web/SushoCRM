@@ -8,8 +8,13 @@ requireLogin();
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     try {
-        $leadId = (int)$_POST['id'];
-        if (!$leadId) throw new Exception("Invalid Lead ID");
+        // Detect post_max_size overflow (PHP clears $_POST and $_FILES if size > post_max_size)
+        if (empty($_POST) && empty($_FILES) && isset($_SERVER['CONTENT_LENGTH']) && $_SERVER['CONTENT_LENGTH'] > 0) {
+            throw new Exception("File too large. The uploaded files exceed the server's maximum allowed size.");
+        }
+
+        $leadId = (int)($_POST['id'] ?? $_GET['id'] ?? 0);
+        if ($leadId <= 0) throw new Exception("Invalid Lead ID");
 
         $allFiles = [];
         if (!empty($_FILES['documents']['name'][0])) {

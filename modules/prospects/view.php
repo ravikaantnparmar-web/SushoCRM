@@ -1245,7 +1245,10 @@ document.getElementById('documentForm').addEventListener('submit', function(e) {
         formData.set('id', urlLeadId);
     }
 
-    fetch('save_docs_ajax.php', {
+    // Append id to URL so it's always accessible via $_GET even if $_POST is cleared by PHP (due to post_max_size limits)
+    const fetchUrl = urlLeadId ? `save_docs_ajax.php?id=${urlLeadId}` : 'save_docs_ajax.php';
+
+    fetch(fetchUrl, {
         method: 'POST',
         body: formData
     })
