@@ -12,7 +12,12 @@ function sanitize(?string $str): string {
 }
 
 function formatCurrency(float $amount): string {
-    return CURRENCY_SYMBOL . ' ' . number_format($amount, 2);
+    $sym = defined('CURRENCY_SYMBOL') ? CURRENCY_SYMBOL : '&#8377;';
+    // Ensure ₹ always displays correctly regardless of encoding (&#8377; = U+20B9)
+    if (empty(trim($sym)) || is_numeric(trim($sym))) {
+        $sym = '&#8377;';
+    }
+    return $sym . ' ' . number_format($amount, 2);
 }
 
 function formatDate(string $date, string $format = 'd M Y'): string {
