@@ -37,26 +37,30 @@ if ($priority) {
 $whereStr = implode(' AND ', $where);
 
 // Count Total
-$totalStmt = db()->prepare("SELECT COUNT(DISTINCT l.id) FROM leads l LEFT JOIN lead_contacts c ON l.id = c.lead_id WHERE $whereStr");
+$totalStmt = db()->prepare("SELECT COUNT(DISTINCT l.id) FROM leads l LEFT JOIN contacts c ON c.id IN (SELECT cr.contact_id FROM contact_relations cr WHERE cr.entity_type = 'lead' AND cr.entity_id = l.id) WHERE $whereStr");
 $totalStmt->execute($params);
 $totalCount = $totalStmt->fetchColumn();
 
 $pag = paginate($totalCount, $per, $page, BASE_URL . '/modules/prospects/index.php?search=' . urlencode($search) . '&status=' . urlencode($status) . '&priority=' . urlencode($priority));
 
 // Fetch Leads
-$sql = "SELECT l.*, u.name AS assigned_name, 
-        (SELECT name FROM lead_contacts WHERE lead_id = l.id AND is_primary = 1 LIMIT 1) as primary_contact,
-        (SELECT mobile FROM lead_contacts WHERE lead_id = l.id AND is_primary = 1 LIMIT 1) as primary_mobile
-        FROM leads l 
-        LEFT JOIN users u ON l.assigned_to = u.id 
-        WHERE $whereStr 
-        ORDER BY l.created_at DESC 
+$sql = "SELECT l.*, u.name AS assigned_name,
+        (SELECT co.name FROM contacts co
+            JOIN contact_relations cr ON co.id = cr.contact_id
+            WHERE cr.entity_type = 'lead' AND cr.entity_id = l.id AND cr.is_primary = 1
+            LIMIT 1) AS primary_contact,
+        (SELECT co.mobile FROM contacts co
+            JOIN contact_relations cr ON co.id = cr.contact_id
+            WHERE cr.entity_type = 'lead' AND cr.entity_id = l.id AND cr.is_primary = 1
+            LIMIT 1) AS primary_mobile
+        FROM leads l
+        LEFT JOIN users u ON l.assigned_to = u.id
+        WHERE $whereStr
+        ORDER BY l.created_at DESC
         LIMIT $per OFFSET {$pag['offset']}";
 $stmt = db()->prepare($sql);
 $stmt->execute($params);
 $leads = $stmt->fetchAll();
-
-
 
 // Base condition for stats (permissions only, no search filters)
 $statWhere = ['deleted_at IS NULL'];
@@ -70,18 +74,46 @@ $statWhereStr = implode(' AND ', $statWhere);
 
 // Dashboard Stats
 $statSql = "
-    SELECT 
+    SELECT
         COUNT(*) as total,
         SUM(CASE WHEN lead_priority = 'Hot Lead' OR lead_status = 'Hot Lead' THEN 1 ELSE 0 END) as hot,
         SUM(CASE WHEN lead_status = 'Won' THEN 1 ELSE 0 END) as won,
         SUM(CASE WHEN lead_status = 'Lost' THEN 1 ELSE 0 END) as lost,
         SUM(CASE WHEN DATE(next_followup_date) = CURDATE() THEN 1 ELSE 0 END) as today_followup
-    FROM leads 
+    FROM leads
     WHERE $statWhereStr
 ";
 $statStmt = db()->prepare($statSql);
 $statStmt->execute($statParams);
 $stats = $statStmt->fetch();
+
+// Colour maps (mixed-case keys matching actual DB values)
+$priorityColors = [
+    'Cold Lead'      => 'secondary',
+    'Warm Lead'      => 'info',
+    'Hot Lead'       => 'danger',
+    'Qualified Lead' => 'success',
+    'Converted Lead' => 'success',
+    'Hold Lead'      => 'warning',
+    'Lost Lead'      => 'dark',
+];
+$statusColors = [
+    'New'             => 'primary',
+    'Open'            => 'info',
+    'Contact Attempt' => 'warning',
+    'Contacted'       => 'info',
+    'Followup'        => 'warning',
+    'Qualified'       => 'success',
+    'Proposal Sent'   => 'primary',
+    'Catalogue Sent'  => 'primary',
+    'Negotiation'     => 'warning',
+    'Won'             => 'success',
+    'Closed'          => 'success',
+    'Lost'            => 'danger',
+    'Duplicate'       => 'secondary',
+    'Junk'            => 'secondary',
+    'Hot Lead'        => 'danger',
+];
 
 include __DIR__ . '/../../includes/header.php'; ?>
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
@@ -98,7 +130,7 @@ include __DIR__ . '/../../includes/header.php'; ?>
 
         <div class="page-header">
             <div class="page-header-left">
-                <h1>Leads & Prospects</h1>
+                <h1>Leads &amp; Prospects</h1>
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item"><a href="<?= BASE_URL ?>/modules/dashboard/index.php">Home</a></li>
@@ -108,19 +140,12 @@ include __DIR__ . '/../../includes/header.php'; ?>
             </div>
             <div class="page-header-right d-flex gap-2">
                 <div class="btn-group shadow-sm">
-                    <a href="index.php" class="btn btn-outline-secondary active"><i
-                            class="bi bi-list-ul me-1"></i>Table</a>
+                    <a href="index.php" class="btn btn-outline-secondary active"><i class="bi bi-list-ul me-1"></i>Table</a>
                     <a href="kanban.php" class="btn btn-outline-secondary"><i class="bi bi-kanban me-1"></i>Kanban</a>
                 </div>
-
-
-
-                <a href="create.php" class="btn btn-primary shadow-sm"><i class="bi bi-plus-lg me-1"></i>Add New
-                    Lead</a>
+                <a href="create.php" class="btn btn-primary shadow-sm"><i class="bi bi-plus-lg me-1"></i>Add New Lead</a>
             </div>
         </div>
-
-
 
         <!-- Dashboard Widgets -->
         <div class="row g-3 mb-4">
@@ -207,14 +232,19 @@ include __DIR__ . '/../../includes/header.php'; ?>
                     <tbody>
                         <?php if (empty($leads)): ?>
                             <tr>
-                                <td colspan="7">
+                                <td colspan="8">
                                     <div class="empty-state"><i class="bi bi-funnel"></i>
                                         <p>No leads matched your search</p>
                                     </div>
                                 </td>
                             </tr>
                         <?php else:
-                            foreach ($leads as $l): ?>
+                            foreach ($leads as $l):
+                                $pr     = $l['lead_priority'] ?? '';
+                                $prColor = $priorityColors[$pr] ?? 'secondary';
+                                $st     = $l['lead_status'] ?? '';
+                                $stColor = $statusColors[$st] ?? 'secondary';
+                        ?>
                                 <tr>
                                     <td>
                                         <div class="fw-semibold"><a href="view.php?id=<?= $l['id'] ?>"
@@ -229,8 +259,20 @@ include __DIR__ . '/../../includes/header.php'; ?>
                                     <td>
                                         <div class="small"><?= e($l['lead_source']) ?></div>
                                     </td>
-                                    <td><?= statusBadge($l['lead_priority']) ?></td>
-                                    <td><?= statusBadge($l['lead_status']) ?></td>
+                                    <td>
+                                        <?php if ($pr): ?>
+                                            <span class="badge bg-<?= $prColor ?>"><?= e($pr) ?></span>
+                                        <?php else: ?>
+                                            <span class="text-muted">—</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php if ($st): ?>
+                                            <span class="badge bg-<?= $stColor ?>"><?= e($st) ?></span>
+                                        <?php else: ?>
+                                            <span class="text-muted">—</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td>
                                         <div class="small"><?= e($l['assigned_name'] ?: 'Unassigned') ?></div>
                                     </td>
@@ -251,7 +293,7 @@ include __DIR__ . '/../../includes/header.php'; ?>
                                         </div>
                                     </td>
                                 </tr>
-                            <?php endforeach; endif; ?>
+                        <?php endforeach; endif; ?>
                     </tbody>
                 </table>
             </div>

@@ -30,11 +30,14 @@ if ($priority) { $where[] = 'l.lead_priority = ?'; $params[] = $priority; }
 
 $whereStr = implode(' AND ', $where);
 
-$sql = "SELECT l.*, 
-        (SELECT name FROM lead_contacts WHERE lead_id = l.id AND is_primary = 1 LIMIT 1) as contact_name,
+$sql = "SELECT l.*,
+        (SELECT co.name FROM contacts co
+            JOIN contact_relations cr ON co.id = cr.contact_id
+            WHERE cr.entity_type = 'lead' AND cr.entity_id = l.id AND cr.is_primary = 1
+            LIMIT 1) AS contact_name,
         (SELECT name FROM users WHERE id = l.assigned_to) as assigned_name
-        FROM leads l 
-        WHERE $whereStr 
+        FROM leads l
+        WHERE $whereStr
         ORDER BY l.created_at DESC";
 $stmt = db()->prepare($sql);
 $stmt->execute($params);
