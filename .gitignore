@@ -1,2 +1,27 @@
+# ── Runtime & generated directories ──────────────────────────────────────────
 /backups/
+/uploads/
 /scratch/
+
+# ── Sensitive / environment files ─────────────────────────────────────────────
+/config/db.php
+.env
+*.env
+
+# ── Database dumps (large SQL files in root) ──────────────────────────────────
+# Uncomment if you do not want database.sql tracked:
+# /database.sql
+
+# ── PHP error & debug logs ────────────────────────────────────────────────────
+*.log
+error_log
+php_errorlog
+
+# ── OS & editor junk ─────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*.swo
